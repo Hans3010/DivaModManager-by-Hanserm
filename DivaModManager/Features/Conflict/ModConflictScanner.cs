@@ -50,6 +50,10 @@ namespace DivaModManager.Features.Conflict
         private const string MODULE_TABLE = "gm_module_id.bin";
         private const string ITEM_TABLE = "gm_customize_item_id.bin";
 
+        // Mod の DLL が各 Mod フォルダから個別に読み込むファイル（DML の上書きではないので全部使われる）
+        // rom/nc_db.toml: New Classics が "%s/rom/nc_db.toml" として Mod ごとに読み込む
+        private static readonly HashSet<string> PerModFiles = new(StringComparer.OrdinalIgnoreCase) { "rom/nc_db.toml" };
+
         /// <param name="mods">有効な Mod（名前とフォルダ）を優先度の高い順に渡す</param>
         public static List<ModConflict> Scan(IReadOnlyList<(string Name, string Path)> mods)
         {
@@ -71,6 +75,8 @@ namespace DivaModManager.Features.Conflict
                     var fileName = Path.GetFileName(relative);
                     // "mod_" で始まるファイルは DML が結合するので競合しない（中身の ID は別途確認する）
                     if (fileName.StartsWith("mod_", StringComparison.OrdinalIgnoreCase)) continue;
+                    // ほかの Mod の DLL が Mod フォルダごとに読み込むファイルも競合しない
+                    if (PerModFiles.Contains(relative)) continue;
                     AddUnique(files, relative, name);
                     displayPath.TryAdd(relative, relative);
                 }
