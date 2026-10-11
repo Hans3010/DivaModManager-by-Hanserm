@@ -1,3 +1,4 @@
+using DivaModManager.Common.Helpers;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,6 +16,9 @@ namespace DivaModManager.Common.MessageWindow
         public LanguageWindow(string currentLanguage = null)
         {
             InitializeComponent();
+            foreach (var (code, name) in LanguagePacks.Available)
+                LanguageComboBox.Items.Add(new ComboBoxItem { Content = name, Tag = code });
+            LanguageComboBox.SelectedIndex = 0;
             var current = LanguageComboBox.Items.OfType<ComboBoxItem>().FirstOrDefault(x => (string)x.Tag == currentLanguage);
             if (current != null) LanguageComboBox.SelectedItem = current;
         }

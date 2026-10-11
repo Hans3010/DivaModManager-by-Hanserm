@@ -40,33 +40,6 @@ namespace DivaModManager.Common.MessageWindow
 
         public static Dictionary<string, WindowInfo> WindowDictionary { get; set; } = new();
 
-        // スペイン語の文言（Resources/Message_es.toml）。キーは "WINDOW-0001" → ("info" など → 文言)
-        public static Dictionary<string, Dictionary<string, string>> SpanishDictionary { get; set; } = new();
-        public static string WINDOW_LIST_ES_RESOURCE_PATH = $"DivaModManager.Resources.Message_es.toml";
-
-        /// <summary>スペイン語の文言を返す（ない場合は null）</summary>
-        public static string Spanish(int id, string field)
-        {
-            return SpanishDictionary.TryGetValue(id.ToString("WINDOW-0000"), out var fields) && fields.TryGetValue(field, out var text) ? text : null;
-        }
-
-        private static void LoadSpanishMessages()
-        {
-            try
-            {
-                using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(WINDOW_LIST_ES_RESOURCE_PATH);
-                if (stream == null) return;
-                using var reader = new StreamReader(stream);
-                var table = Toml.ToModel(reader.ReadToEnd());
-                SpanishDictionary = table.Where(x => x.Value is Tomlyn.Model.TomlTable)
-                    .ToDictionary(x => x.Key, x => ((Tomlyn.Model.TomlTable)x.Value).ToDictionary(y => y.Key, y => y.Value?.ToString()));
-            }
-            catch (Exception ex)
-            {
-                Logger.WriteLine($"Couldn't load Spanish messages: {ex.Message}", LoggerType.Warning);
-            }
-        }
-
         public static bool InitWindowList([CallerMemberName] string caller = "")
         {
             string MeInfo = Logger.GetMeInfo(new StackFrame());
@@ -112,7 +85,6 @@ namespace DivaModManager.Common.MessageWindow
                 var content = reader.ReadToEnd();
 
                 WindowDictionary = Toml.ToModel<Dictionary<string, WindowInfo>>(content);
-                LoadSpanishMessages();
                 ret = true;
             }
 
@@ -285,12 +257,12 @@ namespace DivaModManager.Common.MessageWindow
         public string Info_JP { get; set; }
         [DataMember(Name = "info_en")]
         public string Info_EN { get; set; }
-        /// <summary>設定言語の文言を選ぶ。スペイン語は Message_es.toml、ない場合は英語</summary>
+        /// <summary>設定言語の文言を選ぶ。英語・日本語以外は Languages フォルダの messages.toml、ない場合は英語</summary>
         private string Pick(string field, string jp, string en)
         {
             var lang = Global.ConfigToml?.Language;
             if (lang == ConfigTomlDmm.Lang.JP.ToString()) return jp;
-            if (lang == ConfigTomlDmm.Lang.ES.ToString()) return WindowList.Spanish(ID, field) ?? en;
+            if (!LanguagePacks.IsBuiltIn(lang)) return LanguagePacks.Message(lang, ID, field) ?? en;
             return en;
         }
         public string Info() => WindowList.ReplaceMessage(Pick("info", Info_JP, Info_EN), replaceList);

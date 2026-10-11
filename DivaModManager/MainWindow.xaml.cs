@@ -481,6 +481,12 @@ namespace DivaModManager
         private void SyncLanguageComboBox()
         {
             isSyncingLanguageComboBox = true;
+            if (LanguageComboBox.Items.Count == 0)
+            {
+                // 組み込みの英語・日本語と Languages フォルダの言語
+                foreach (var (code, name) in LanguagePacks.Available)
+                    LanguageComboBox.Items.Add(new ComboBoxItem { Content = name, Tag = code });
+            }
             var lang = Global.ConfigToml?.Language;
             LanguageComboBox.SelectedItem = LanguageComboBox.Items.OfType<ComboBoxItem>().FirstOrDefault(x => (string)x.Tag == lang)
                 ?? LanguageComboBox.Items[0];

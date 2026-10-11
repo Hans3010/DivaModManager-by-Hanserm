@@ -88,6 +88,7 @@ namespace DivaModManager
 
             ConfigTomlDmm.InitToml();
 
+            LanguagePacks.Load();
             SetLanguage();
             UiTranslator.Initialize();
 

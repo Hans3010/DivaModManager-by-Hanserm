@@ -9,9 +9,6 @@
         <TextBlock Text="You can change it later in Option. / Optionで後から変更できます。 / Puedes cambiarlo después en Option."
                    Foreground="#b0b0b0" FontSize="13" Margin="0,8,0,16" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
         <ComboBox Name="LanguageComboBox" Height="36" FontSize="18" SelectedIndex="0">
-            <ComboBoxItem Content="English" Tag="EN"/>
-            <ComboBoxItem Content="日本語 (Japanese)" Tag="JP"/>
-            <ComboBoxItem Content="Español (Spanish)" Tag="ES"/>
         </ComboBox>
         <CheckBox Name="DontShowAgainCheckBox" Margin="0,14,0,0" Foreground="White" FontSize="14" IsChecked="True"
                   Content="Don't show this again / 次回から表示しない / No volver a mostrar"/>

@@ -40,6 +40,7 @@ A community fork of [DivaModManager by Enomoto](https://github.com/enomoto-r02/D
 
 **Language**
 - Spanish translation (Option tab, Language / Idioma).
+- New languages can be added without programming: see [TRANSLATING.md](TRANSLATING.md).
 
 **Other**
 - Downloaded archives are deleted after installing instead of filling the Recycle Bin.
