@@ -40,14 +40,42 @@ namespace DivaModManager.Features.Feed
             return host + uri.AbsolutePath.TrimEnd('/').ToLowerInvariant();
         }
 
-        /// <summary>インストール済み Mod の mod.json に保存されたページ URL の一覧</summary>
-        public static HashSet<string> GetInstalledLinks()
+        /// <summary>"Nitori's Song Pack" と "nitoris song pack" を同じ名前として扱う（英数字と各国の文字のみ、小文字）</summary>
+        public static string NormalizeName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return null;
+            var normalized = new string(name.Where(char.IsLetterOrDigit).Select(char.ToLowerInvariant).ToArray());
+            return normalized.Length >= 3 ? normalized : null;
+        }
+
+        /// <summary>
+        /// インストール済み Mod の情報: mod.json に保存されたページ URL と、Mod の名前（フォルダ名・config.toml の name）。
+        /// ドラッグ＆ドロップで入れた Mod は URL がなく、同じ Mod が GameBanana と DivaModArchive の両方にある場合も
+        /// 片方の URL しかないので、名前でも照合する
+        /// </summary>
+        public static (HashSet<string> Links, HashSet<string> Names) GetInstalled()
         {
             var links = new HashSet<string>();
+            var names = new HashSet<string>();
             var modsFolder = Global.ConfigJson?.CurrentConfig?.ModsFolder;
-            if (string.IsNullOrEmpty(modsFolder) || !Directory.Exists(modsFolder)) return links;
+            if (string.IsNullOrEmpty(modsFolder) || !Directory.Exists(modsFolder)) return (links, names);
             foreach (var dir in Directory.EnumerateDirectories(modsFolder))
             {
+                var folderName = NormalizeName(Path.GetFileName(dir));
+                if (folderName != null) names.Add(folderName);
+
+                var toml = Path.Combine(dir, "config.toml");
+                if (File.Exists(toml))
+                {
+                    try
+                    {
+                        var match = System.Text.RegularExpressions.Regex.Match(File.ReadAllText(toml), @"^\s*name\s*=\s*""((?:[^""\\]|\\.)*)""", System.Text.RegularExpressions.RegexOptions.Multiline);
+                        var tomlName = match.Success ? NormalizeName(match.Groups[1].Value) : null;
+                        if (tomlName != null) names.Add(tomlName);
+                    }
+                    catch (Exception) { }
+                }
+
                 var json = Path.Combine(dir, "mod.json");
                 if (!File.Exists(json)) continue;
                 try
@@ -58,9 +86,8 @@ namespace DivaModManager.Features.Feed
                 }
                 catch (Exception) { }
             }
-            return links;
+            return (links, names);
         }
-
         private static List<FavoriteEntry> Favorites
         {
             get
@@ -90,7 +117,7 @@ namespace DivaModManager.Features.Feed
         public static void Mark<T>(IEnumerable<T> items) where T : class
         {
             if (items == null) return;
-            var installed = GetInstalledLinks();
+            var installed = GetInstalled();
             var favoriteKeys = new HashSet<string>(Favorites.Select(f => f.Key));
             foreach (var item in items)
             {
@@ -98,16 +125,22 @@ namespace DivaModManager.Features.Feed
                 {
                     case GameBananaRecord gb:
                         var gbKey = NormalizeLink(gb.Link);
-                        gb.IsInstalled = gbKey != null && installed.Contains(gbKey);
+                        gb.IsInstalled = (gbKey != null && installed.Links.Contains(gbKey)) || IsNameInstalled(installed.Names, gb.Title);
                         gb.IsFavorite = gbKey != null && favoriteKeys.Contains(gbKey);
                         break;
                     case DivaModArchivePost dma:
                         var dmaKey = NormalizeLink(dma.Link);
-                        dma.IsInstalled = installed.Contains(dmaKey);
+                        dma.IsInstalled = installed.Links.Contains(dmaKey) || IsNameInstalled(installed.Names, dma.Name);
                         dma.IsFavorite = favoriteKeys.Contains(dmaKey);
                         break;
                 }
             }
+        }
+
+        private static bool IsNameInstalled(HashSet<string> names, string title)
+        {
+            var key = NormalizeName(title);
+            return key != null && names.Contains(key);
         }
 
         /// <summary>お気に入りの追加・解除を切り替える</summary>
