@@ -10,6 +10,11 @@
     <AssemblyName>DivaModManager</AssemblyName>
     <AssemblyVersion>1.4.0.0</AssemblyVersion>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <!-- dotnet publish で DivaModManager.exe 1つにまとめる（.NET ランタイムも同梱、圧縮）。通常の build には影響しない -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <SatelliteResourceLanguages>en;ja;es</SatelliteResourceLanguages>
     <Platforms>AnyCPU;x64</Platforms>
     <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
   </PropertyGroup>
@@ -95,6 +100,7 @@
     </Content>
     <Content Include="x64\7z.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </Content>
     <Resource Include="Assets\dummy.png" />
     <EmbeddedResource Include="Resources\Message_es.toml" />
@@ -137,6 +143,7 @@
     <Resource Include="Common\Style\ScrollViewer.xaml" />
     <Content Include="x64\7z.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </Content>
   </ItemGroup>
 
