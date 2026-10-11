@@ -1066,7 +1066,7 @@ namespace DivaModManager
 
         private void GitHubSponsorsButton_Click(object sender, RoutedEventArgs e)
         {
-            ProcessHelper.TryStartProcess($"https://github.com/sponsors/enomoto-r02?frequency=one-time");
+            ProcessHelper.TryStartProcess(DMMUpdater.DONATION_URL);
         }
 
         private void GBGameBananaButton_Click(object sender, RoutedEventArgs e)

@@ -28,6 +28,7 @@ namespace DivaModManager.Features.DMM
         public static readonly string REPO_OWNER = "Hans3010";
         public static readonly string REPO_NAME = "DivaModManager-by-Hanserm";
         public static readonly string RELEASES_URL = $"https://github.com/{REPO_OWNER}/{REPO_NAME}/releases";
+        public static readonly string DONATION_URL = "https://ko-fi.com/hanserm";
 
         private static ProgressBox progressBox;
         private static GitHubClient client;

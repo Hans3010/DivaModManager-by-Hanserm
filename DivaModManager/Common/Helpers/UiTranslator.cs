@@ -175,7 +175,7 @@ namespace DivaModManager.Common.Helpers
             ["Go to gamebanana.com"] = "Ir a gamebanana.com",
             ["Go to divamodarchive.com"] = "Ir a divamodarchive.com",
             ["Go to GitHub"] = "Ir a GitHub",
-            ["Go to GitHub Sponsors"] = "Apoyar en GitHub Sponsors",
+            ["Support on Ko-fi"] = "Apoyar en Ko-fi",
             ["Join the Discord!"] = "¡Únete al Discord!",
             ["Page 1"] = "Página 1",
             ["Alt. Downloads"] = "Descargas alternativas",

@@ -426,7 +426,7 @@ button_1 = "Sí"
 button_2 = "No"
 [WINDOW-0087]
 info = "¿Te diste cuenta?"
-context = "¡Puedes apoyar el desarrollo con el ícono de regalo de arriba a la derecha!\n¡Una donación única, no mensual, también es muy bienvenida!\n(¡Sí, a la derecha del ícono de Discord!)"
+context = "¡Puedes apoyar el desarrollo de Hanserm con el ícono de regalo (Ko-fi) de arriba a la derecha!\n¡Una donación única, no mensual, también es muy bienvenida!\n(¡Sí, a la derecha del ícono de Discord!)"
 window_title = "¡Se busca apoyo!"
 button_1 = "Si me dan ganas."
 button_2 = "Algún día."
