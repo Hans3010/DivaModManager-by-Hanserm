@@ -40,6 +40,33 @@ namespace DivaModManager.Common.MessageWindow
 
         public static Dictionary<string, WindowInfo> WindowDictionary { get; set; } = new();
 
+        // スペイン語の文言（Resources/Message_es.toml）。キーは "WINDOW-0001" → ("info" など → 文言)
+        public static Dictionary<string, Dictionary<string, string>> SpanishDictionary { get; set; } = new();
+        public static string WINDOW_LIST_ES_RESOURCE_PATH = $"DivaModManager.Resources.Message_es.toml";
+
+        /// <summary>スペイン語の文言を返す（ない場合は null）</summary>
+        public static string Spanish(int id, string field)
+        {
+            return SpanishDictionary.TryGetValue(id.ToString("WINDOW-0000"), out var fields) && fields.TryGetValue(field, out var text) ? text : null;
+        }
+
+        private static void LoadSpanishMessages()
+        {
+            try
+            {
+                using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(WINDOW_LIST_ES_RESOURCE_PATH);
+                if (stream == null) return;
+                using var reader = new StreamReader(stream);
+                var table = Toml.ToModel(reader.ReadToEnd());
+                SpanishDictionary = table.Where(x => x.Value is Tomlyn.Model.TomlTable)
+                    .ToDictionary(x => x.Key, x => ((Tomlyn.Model.TomlTable)x.Value).ToDictionary(y => y.Key, y => y.Value?.ToString()));
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLine($"Couldn't load Spanish messages: {ex.Message}", LoggerType.Warning);
+            }
+        }
+
         public static bool InitWindowList([CallerMemberName] string caller = "")
         {
             string MeInfo = Logger.GetMeInfo(new StackFrame());
@@ -85,6 +112,7 @@ namespace DivaModManager.Common.MessageWindow
                 var content = reader.ReadToEnd();
 
                 WindowDictionary = Toml.ToModel<Dictionary<string, WindowInfo>>(content);
+                LoadSpanishMessages();
                 ret = true;
             }
 
@@ -257,25 +285,20 @@ namespace DivaModManager.Common.MessageWindow
         public string Info_JP { get; set; }
         [DataMember(Name = "info_en")]
         public string Info_EN { get; set; }
-        public string Info()
+        /// <summary>設定言語の文言を選ぶ。スペイン語は Message_es.toml、ない場合は英語</summary>
+        private string Pick(string field, string jp, string en)
         {
-            if (Global.ConfigToml == null) return WindowList.ReplaceMessage(Info_EN, replaceList);
-            else if (Global.ConfigToml.Language == ConfigTomlDmm.Lang.JP.ToString()) return WindowList.ReplaceMessage(Info_JP, replaceList);
-            else if (Global.ConfigToml.Language == ConfigTomlDmm.Lang.EN.ToString()) return WindowList.ReplaceMessage(Info_EN, replaceList);
-            else return string.Empty;
+            var lang = Global.ConfigToml?.Language;
+            if (lang == ConfigTomlDmm.Lang.JP.ToString()) return jp;
+            if (lang == ConfigTomlDmm.Lang.ES.ToString()) return WindowList.Spanish(ID, field) ?? en;
+            return en;
         }
+        public string Info() => WindowList.ReplaceMessage(Pick("info", Info_JP, Info_EN), replaceList);
         [DataMember(Name = "context_jp")]
         public string Context_JP { get; set; }
         [DataMember(Name = "context_en")]
         public string Context_EN { get; set; }
-        public string Context()
-        {
-            if (Global.ConfigToml.Language == ConfigTomlDmm.Lang.JP.ToString())
-                return WindowList.ReplaceMessage(Context_JP, replaceList);
-            else if (Global.ConfigToml.Language == ConfigTomlDmm.Lang.EN.ToString())
-                return WindowList.ReplaceMessage(Context_EN, replaceList);
-            else return string.Empty;
-        }
+        public string Context() => WindowList.ReplaceMessage(Pick("context", Context_JP, Context_EN), replaceList);
 
         // MessageWindow
         [DataMember(Name = "window_type")]
@@ -284,57 +307,31 @@ namespace DivaModManager.Common.MessageWindow
         public string WindowTitle_JP { get; set; }
         [DataMember(Name = "window_title_en")]
         public string WindowTitle_EN { get; set; }
-        public string WindowTitle()
-        {
-            if (Global.ConfigToml == null) return WindowList.ReplaceMessage(WindowTitle_EN, replaceList);
-            else if (Global.ConfigToml.Language == ConfigTomlDmm.Lang.JP.ToString()) return WindowList.ReplaceMessage(WindowTitle_JP, replaceList);
-            else if (Global.ConfigToml.Language == ConfigTomlDmm.Lang.EN.ToString()) return WindowList.ReplaceMessage(WindowTitle_EN, replaceList);
-            else return string.Empty;
-        }
+        public string WindowTitle() => WindowList.ReplaceMessage(Pick("window_title", WindowTitle_JP, WindowTitle_EN), replaceList);
         // button_1
         [DataMember(Name = "button_1_jp")]
         public string Button_1_JP { get; set; }
         [DataMember(Name = "button_1_en")]
         public string Button_1_EN { get; set; }
-        public string Button_1()
-        {
-            if (Global.ConfigToml.Language == ConfigTomlDmm.Lang.JP.ToString()) return Button_1_JP;
-            else if (Global.ConfigToml.Language == ConfigTomlDmm.Lang.EN.ToString()) return Button_1_EN;
-            else return string.Empty;
-        }
+        public string Button_1() => Pick("button_1", Button_1_JP, Button_1_EN);
         // button_2
         [DataMember(Name = "button_2_jp")]
         public string Button_2_JP { get; set; }
         [DataMember(Name = "button_2_en")]
         public string Button_2_EN { get; set; }
-        public string Button_2()
-        {
-            if (Global.ConfigToml.Language == ConfigTomlDmm.Lang.JP.ToString()) return Button_2_JP;
-            else if (Global.ConfigToml.Language == ConfigTomlDmm.Lang.EN.ToString()) return Button_2_EN;
-            else return string.Empty;
-        }
+        public string Button_2() => Pick("button_2", Button_2_JP, Button_2_EN);
         // button_3
         [DataMember(Name = "button_3_jp")]
         public string Button_3_JP { get; set; }
         [DataMember(Name = "button_3_en")]
         public string Button_3_EN { get; set; }
-        public string Button_3()
-        {
-            if (Global.ConfigToml.Language == ConfigTomlDmm.Lang.JP.ToString()) return Button_3_JP;
-            else if (Global.ConfigToml.Language == ConfigTomlDmm.Lang.EN.ToString()) return Button_3_EN;
-            else return string.Empty;
-        }
+        public string Button_3() => Pick("button_3", Button_3_JP, Button_3_EN);
         // check_1
         [DataMember(Name = "check_1_jp")]
         public string Check_1_JP { get; set; }
         [DataMember(Name = "check_1_en")]
         public string Check_1_EN { get; set; }
-        public string Check_1()
-        {
-            if (Global.ConfigToml.Language == ConfigTomlDmm.Lang.JP.ToString()) return WindowList.ReplaceMessage(Check_1_JP, replaceList);
-            else if (Global.ConfigToml.Language == ConfigTomlDmm.Lang.EN.ToString()) return WindowList.ReplaceMessage(Check_1_EN, replaceList);
-            else return string.Empty;
-        }
+        public string Check_1() => WindowList.ReplaceMessage(Pick("check_1", Check_1_JP, Check_1_EN), replaceList);
 
         public string WindowId() { return $"WINDOW-{ID.ToString("0000")}"; }
 

@@ -21,17 +21,14 @@ namespace DivaModManager.Common.ExtendToml
             foreach (var prop in props)
             {
                 DataMemberComment commentAttr;
-                if (Global.ConfigToml.Language == ConfigTomlDmm.Lang.EN.ToString())
-                {
-                    commentAttr = prop.GetCustomAttribute<DataMemberCommentEN>();
-                }
-                else if (Global.ConfigToml.Language == ConfigTomlDmm.Lang.JP.ToString())
+                if (Global.ConfigToml.Language == ConfigTomlDmm.Lang.JP.ToString())
                 {
                     commentAttr = prop.GetCustomAttribute<DataMemberCommentJP>();
                 }
                 else
                 {
-                    commentAttr = null;
+                    // 英語・スペイン語は英語のコメント
+                    commentAttr = prop.GetCustomAttribute<DataMemberCommentEN>();
                 }
                 var dataAttr = prop.GetCustomAttribute<DataMemberAttribute>();
 
@@ -76,17 +73,14 @@ namespace DivaModManager.Common.ExtendToml
             foreach (var prop in props)
             {
                 DataMemberComment commentAttr;
-                if (Global.ConfigToml.Language == ConfigTomlDmm.Lang.EN.ToString())
-                {
-                    commentAttr = prop.GetCustomAttribute<DataMemberCommentEN>();
-                }
-                else if (Global.ConfigToml.Language == ConfigTomlDmm.Lang.JP.ToString())
+                if (Global.ConfigToml.Language == ConfigTomlDmm.Lang.JP.ToString())
                 {
                     commentAttr = prop.GetCustomAttribute<DataMemberCommentJP>();
                 }
                 else
                 {
-                    commentAttr = null;
+                    // 英語・スペイン語は英語のコメント
+                    commentAttr = prop.GetCustomAttribute<DataMemberCommentEN>();
                 }
                 var dataAttr = prop.GetCustomAttribute<DataMemberAttribute>();
 

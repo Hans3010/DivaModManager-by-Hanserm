@@ -26,7 +26,7 @@ namespace DivaModManager.Features.Conflict
         /// <summary>重複している Mod（優先度順。先頭が実際に使われる）</summary>
         public List<string> Mods { get; set; } = new();
 
-        public string TypeText => Type switch
+        public string TypeText => UiTranslator.T(Type switch
         {
             ConflictType.File => "File",
             ConflictType.Song => "Song ID",
@@ -34,7 +34,7 @@ namespace DivaModManager.Features.Conflict
             ConflictType.ModuleCostume => "Costume slot",
             ConflictType.CustomizeItem => "Item ID",
             _ => Type.ToString(),
-        };
+        });
         public string Winner => Mods.FirstOrDefault();
         public string Overridden => string.Join(", ", Mods.Skip(1));
         public string Element => string.IsNullOrEmpty(Detail) ? Key : $"{Key}  ({Detail})";

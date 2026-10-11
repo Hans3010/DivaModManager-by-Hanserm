@@ -28,6 +28,7 @@ namespace DivaModManager.Common.Config
             None,
             JP,
             EN,
+            ES,
         }
 
         [IgnoreDataMember]

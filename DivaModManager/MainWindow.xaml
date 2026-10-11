@@ -1278,6 +1278,9 @@
                         <Button IsEnabled="False" Click="GBSearchButton_Click" Name="GBSearchButton" Height="35" Width="35" Margin="0,0,5,0">
                             <Image Source="/Assets/fontawesome/search.png" Height="28" Width="28" />
                         </Button>
+                        <CheckBox Name="GBFavoritesCheckBox" Checked="GBFavoritesCheckBox_Changed" Unchecked="GBFavoritesCheckBox_Changed" Margin="0,0,10,0" VerticalAlignment="Center" ToolTip="Show only your favorite mods" Cursor="Hand">
+                            <TextBlock Foreground="#f2f2f2" FontFamily="{StaticResource DmmFont}" FontSize="18"><Run Text="♥" Foreground="#ff5c8a"/> Favorites</TextBlock>
+                        </CheckBox>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,5,0">
                             <CheckBox Name="GBNSFWCheckbox" IsEnabled="False" Unchecked="GBNSFWCheckbox_Checked" Checked="GBNSFWCheckbox_Checked" Margin="0,0,5,0" VerticalAlignment="Center"/>
                             <TextBlock Foreground="#f2f2f2" FontFamily="{StaticResource DmmFont}" VerticalAlignment="Center" FontSize="18">NS<LineBreak/>FW</TextBlock>
@@ -1297,7 +1300,6 @@
                     </Popup>
 
                     <DockPanel x:Name="GBControlPanelBottomLeft" Grid.Row="2" VerticalAlignment="Center"  HorizontalAlignment="Left" Grid.ColumnSpan="3">
-                        <CheckBox Name="GBFavoritesCheckBox" Checked="GBFavoritesCheckBox_Changed" Unchecked="GBFavoritesCheckBox_Changed" Margin="10" VerticalAlignment="Center" Content="★ Favorites" ToolTip="Show only your favorite mods" FontFamily="{StaticResource DmmFont}" Foreground="#f2f2f2"/>
                         <CheckBox Name="GBCacheUseCheckBox" IsEnabled="True" Checked="GBCacheUseCheckBox_Checked" Unchecked="GBCacheUseCheckBox_Unchecked" Margin="10" VerticalAlignment="Center" Content="Cache Use" FontFamily="{StaticResource DmmFont}" Foreground="#f2f2f2" IsChecked="True"/>
                         <Button Click="GBClearCacheButton_Click" Name="GBClearCacheButton" Content="Clear Cache" FontFamily="{StaticResource DmmFont}" FontSize="18"  Height="35" Width="120" Background="#181818" BorderBrush="#252525" IsEnabled="False" Foreground="#f2f2f2" Margin="5" >
                             <Button.Resources>
@@ -1417,6 +1419,9 @@
                         <Button Grid.Column="0" IsEnabled="False" HorizontalAlignment="Right" Click="DMASearchButton_Click" Name="DMASearchButton" Height="35" Width="35" Margin="5,0,5,0">
                             <Image Source="/Assets/fontawesome/search.png" Height="28" Width="28" />
                         </Button>
+                        <CheckBox Name="DMAFavoritesCheckBox" Checked="DMAFavoritesCheckBox_Changed" Unchecked="DMAFavoritesCheckBox_Changed" Margin="0,0,10,0" VerticalAlignment="Center" ToolTip="Show only your favorite mods" Cursor="Hand">
+                            <TextBlock Foreground="#f2f2f2" FontFamily="{StaticResource DmmFont}" FontSize="18"><Run Text="♥" Foreground="#ff5c8a"/> Favorites</TextBlock>
+                        </CheckBox>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,5,0">
                             <CheckBox Name="NSFWCheckboxDMA" IsEnabled="False" Unchecked="NSFWCheckboxDMA_Checked" Checked="NSFWCheckboxDMA_Checked" Margin="0,0,5,0" VerticalAlignment="Center" Visibility="Collapsed"/>
                             <TextBlock Foreground="#f2f2f2" FontFamily="{StaticResource DmmFont}" VerticalAlignment="Center" FontSize="18" Visibility="Collapsed">NS<LineBreak/>FW</TextBlock>
@@ -1436,7 +1441,6 @@
                     </StackPanel>
 
                     <DockPanel x:Name="DMAControlPanelBottomLeft" Grid.Row="2" VerticalAlignment="Center"  HorizontalAlignment="Left" Grid.ColumnSpan="3">
-                        <CheckBox Name="DMAFavoritesCheckBox" Checked="DMAFavoritesCheckBox_Changed" Unchecked="DMAFavoritesCheckBox_Changed" Margin="10" VerticalAlignment="Center" Content="★ Favorites" ToolTip="Show only your favorite mods" FontFamily="{StaticResource DmmFont}" Foreground="#f2f2f2"/>
                         <CheckBox Name="DMACacheUseCheckBox" IsEnabled="True" Checked="DMACacheUseCheckBox_Checked" Unchecked="DMACacheUseCheckBox_Unchecked" Margin="10" VerticalAlignment="Center" Content="Cache Use" FontFamily="{StaticResource DmmFont}" Foreground="#f2f2f2" IsChecked="True"/>
                         <Button Click="DMAClearCacheButton_Click" Name="DMAClearCacheButton" Content="Clear Cache" FontFamily="{StaticResource DmmFont}" FontSize="18"  Height="35" Width="120" Background="#181818" BorderBrush="#252525" IsEnabled="False" Foreground="#f2f2f2" Margin="5" >
                             <Button.Resources>
@@ -1638,6 +1642,19 @@
                         </Grid.ColumnDefinitions>
                         <Button Name="OneClickInstallButton" Content="One-Click Install" Grid.Column="0" Grid.Row="0" Foreground="#f2f2f2" FontSize="18" FontWeight="Normal" Margin="10,10,10,10" Height="35" VerticalAlignment="Center" HorizontalAlignment="Stretch" Background="#181818" BorderBrush="#252525" FontFamily="{StaticResource DmmFont}" Click="OneClickInstallButton_Click"/>
                         <Button Name="SettingsBackUpButton" Content="Settings BackUp" Grid.Column="0" Grid.Row="1" Foreground="#f2f2f2" FontSize="18" FontWeight="Normal" Margin="10,0,10,0" Height="35" VerticalAlignment="Center" Background="#181818" BorderBrush="#252525" FontFamily="{StaticResource DmmFont}" Click="SettingsBackUpButton_Click"/>
+                        <!-- 表示言語（変更すると再起動する） -->
+                        <Grid Grid.Column="0" Grid.Row="2" Margin="10,0,10,0" VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="🌐 Language / Idioma" Foreground="#f2f2f2" FontSize="18" FontFamily="{StaticResource DmmFont}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <ComboBox Name="LanguageComboBox" Grid.Column="1" Height="35" FontSize="18" FontFamily="{StaticResource DmmFont}" SelectionChanged="LanguageComboBox_SelectionChanged">
+                                <ComboBoxItem Content="English" Tag="EN"/>
+                                <ComboBoxItem Content="日本語" Tag="JP"/>
+                                <ComboBoxItem Content="Español" Tag="ES"/>
+                            </ComboBox>
+                        </Grid>
                     </Grid>
                 </TabItem.Content>
             </TabItem>

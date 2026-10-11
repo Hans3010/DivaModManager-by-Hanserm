@@ -25,7 +25,7 @@ namespace DivaModManager.Features.Conflict
         private async Task ScanAsync()
         {
             RescanButton.IsEnabled = false;
-            SummaryText.Text = "Scanning enabled mods...";
+            SummaryText.Text = UiTranslator.T("Scanning enabled mods...");
             ConflictGrid.ItemsSource = null;
 
             var mods = getEnabledMods();
@@ -33,8 +33,8 @@ namespace DivaModManager.Features.Conflict
 
             ConflictGrid.ItemsSource = conflicts;
             SummaryText.Text = conflicts.Count == 0
-                ? $"No conflicts found between your {mods.Count} enabled mods."
-                : $"{conflicts.Count} conflicts found between your {mods.Count} enabled mods: "
+                ? UiTranslator.Format("No conflicts found between your {0} enabled mods.", mods.Count)
+                : UiTranslator.Format("{0} conflicts found between your {1} enabled mods: ", conflicts.Count, mods.Count)
                   + string.Join(", ", conflicts.GroupBy(c => c.TypeText).Select(g => $"{g.Count()} {g.Key}"));
             RescanButton.IsEnabled = true;
         }

@@ -38,13 +38,13 @@ namespace DivaModManager
             if (pauseTokenSource.IsPaused)
             {
                 pauseTokenSource.Resume();
-                PauseButton.Content = "Pause";
+                PauseButton.Content = Common.Helpers.UiTranslator.T("Pause");
                 taskBarItem.ProgressState = TaskbarItemProgressState.Normal;
             }
             else
             {
                 pauseTokenSource.Pause();
-                PauseButton.Content = "Resume";
+                PauseButton.Content = Common.Helpers.UiTranslator.T("Resume");
                 taskBarItem.ProgressState = TaskbarItemProgressState.Paused;
             }
         }

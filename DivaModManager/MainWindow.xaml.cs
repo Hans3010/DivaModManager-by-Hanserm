@@ -474,6 +474,54 @@ namespace DivaModManager
             }
         }
 
+        #region 表示言語
+
+        private bool isSyncingLanguageComboBox = false;
+
+        private void SyncLanguageComboBox()
+        {
+            isSyncingLanguageComboBox = true;
+            var lang = Global.ConfigToml?.Language;
+            LanguageComboBox.SelectedItem = LanguageComboBox.Items.OfType<ComboBoxItem>().FirstOrDefault(x => (string)x.Tag == lang)
+                ?? LanguageComboBox.Items[0];
+            isSyncingLanguageComboBox = false;
+        }
+
+        private void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!IsLoaded || isSyncingLanguageComboBox || LanguageComboBox.SelectedItem is not ComboBoxItem item) return;
+            var lang = (string)item.Tag;
+            if (lang == Global.ConfigToml.Language) return;
+
+            Global.ConfigToml.Language = lang;
+            Global.ConfigToml.LanguageDialog = false;
+            Global.ConfigToml.Update();
+
+            var message = lang switch
+            {
+                "ES" => "El idioma cambia al reiniciar DivaModManager. ¿Reiniciar ahora?",
+                "JP" => "言語は DivaModManager の再起動後に反映されます。今すぐ再起動しますか？",
+                _ => "The language changes after restarting DivaModManager. Restart now?",
+            };
+            if (MessageBox.Show(this, message, "Language / Idioma", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                var exe = Environment.ProcessPath;
+                if (!string.IsNullOrEmpty(exe))
+                {
+                    // 二重起動チェックに引っかからないよう、終了してから少し待って起動する
+                    Process.Start(new ProcessStartInfo("cmd.exe", $"/c ping 127.0.0.1 -n 3 > nul & start \"\" \"{exe}\"")
+                    {
+                        CreateNoWindow = true,
+                        UseShellExecute = false,
+                        WorkingDirectory = Global.assemblyLocation,
+                    });
+                    Application.Current.Shutdown();
+                }
+            }
+        }
+
+        #endregion
+
         #region お気に入り・インストール済み表示（GameBanana / DivaModArchive タブ）
 
         private void Favorite_Click(object sender, RoutedEventArgs e)
@@ -556,7 +604,7 @@ namespace DivaModManager
             {
                 var mods = GetEnabledModsInPriority();
                 var conflicts = await Task.Run(() => ModConflictScanner.Scan(mods));
-                ConflictsButton.Content = conflicts.Count > 0 ? $"Conflicts ({conflicts.Count})" : "Conflicts";
+                ConflictsButton.Content = conflicts.Count > 0 ? $"{UiTranslator.T("Conflicts")} ({conflicts.Count})" : UiTranslator.T("Conflicts");
                 ConflictsButton.Foreground = new System.Windows.Media.SolidColorBrush(conflicts.Count > 0
                     ? System.Windows.Media.Color.FromRgb(0xff, 0xb3, 0x47)
                     : System.Windows.Media.Color.FromRgb(0xf2, 0xf2, 0xf2));
@@ -4322,6 +4370,7 @@ namespace DivaModManager
 
         private void OptionTab_TabSelected(object sender, RoutedEventArgs e)
         {
+            SyncLanguageComboBox();
             //if (Global.IsWine)
             //{
             //    App.Current.Dispatcher.Invoke(() =>

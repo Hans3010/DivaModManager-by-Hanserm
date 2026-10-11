@@ -84,7 +84,9 @@ namespace DivaModManager.Common.Helpers
 
                     // 解凍用の一時フォルダ(temp_)内はインストール済みModのコピーなので、ごみ箱に送らず直接削除する
                     // （数千ファイル・数GBがごみ箱に溜まり、1ファイルずつの処理で非常に遅くなっていた）
-                    if (IsInExtractTempDirectory(fullPath))
+                    // DMM がダウンロードしたアーカイブ（DMM\Downloads 直下）もインストール後は不要なので直接削除する
+                    // （ごみ箱は C ドライブにあるため、曲パックをダウンロードするたびに数GBずつ溜まっていた）
+                    if (IsInExtractTempDirectory(fullPath) || IsDownloadedArchive(fullPath))
                     {
                         System.IO.File.SetAttributes(deleteFilePath, FileAttributes.Normal);
                         System.IO.File.Delete(deleteFilePath);
@@ -397,6 +399,19 @@ namespace DivaModManager.Common.Helpers
         {
             var tempPrefix = Path.GetFullPath(Path.Combine(Global.assemblyLocation, "Downloads", "temp_"));
             return StartsWith(Path.GetFullPath(fullPath), tempPrefix);
+        }
+
+        /// <summary>
+        /// DMM がダウンロードしたアーカイブ（DMM/Downloads 直下の zip / 7z / rar）か
+        /// ドラッグ＆ドロップで追加した元ファイルは DMM/Downloads にないので対象外
+        /// </summary>
+        public static bool IsDownloadedArchive(string fullPath)
+        {
+            var downloads = Path.GetFullPath(Path.Combine(Global.assemblyLocation, "Downloads"));
+            var full = Path.GetFullPath(fullPath);
+            if (!PathsEqual(Path.GetDirectoryName(full), downloads)) return false;
+            var ext = Path.GetExtension(full).ToLowerInvariant();
+            return ext == ".zip" || ext == ".7z" || ext == ".rar";
         }
 
         public static DIVA_PATH_RESULT IsDivaModFileOrDirectory(string targetPath, [CallerMemberName] string caller = "")

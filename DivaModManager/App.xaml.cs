@@ -89,6 +89,7 @@ namespace DivaModManager
             ConfigTomlDmm.InitToml();
 
             SetLanguage();
+            UiTranslator.Initialize();
 
             if (Global.ConfigToml.GitHubSposorsWindow || Global.IsUpdateConfigVersion)
             {

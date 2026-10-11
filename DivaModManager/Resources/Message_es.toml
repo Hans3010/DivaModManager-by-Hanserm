@@ -1,0 +1,448 @@
+# Traducción al español (neutro) de Message.toml.
+# Si falta un texto aquí, se muestra el texto en inglés.
+
+[WINDOW-0001]
+info = "Hay varios config.toml"
+context = "Vuelve a descargar el mod \no revisa la página de donde lo descargaste."
+window_title = "Advertencia"
+[WINDOW-0002]
+info = "Falta el config.toml."
+context = "Vuelve a descargar el mod \no revisa la página de donde lo descargaste."
+window_title = "Error"
+[WINDOW-0003]
+info = "La estructura del mod no es correcta (config.toml está en otra carpeta)"
+context = "Se encontró config.toml, pero está en otra carpeta.\nRevisa si el mod quedó dentro de una carpeta duplicada."
+window_title = "Error"
+[WINDOW-0004]
+info = "Es posible que ya tengas esta versión del mod que intentas descargar."
+context = "¿Quieres continuar con la descarga?"
+window_title = "Información"
+button_1 = "Sí"
+button_2 = "No"
+button_3 = "Abrir mod"
+[WINDOW-0005]
+info = "Es posible que ya tengas el mod que intentas descargar."
+context = "La versión del enlace puede ser más nueva. \n¿Quieres actualizar o descargar una versión nueva? \n(Si cierras este mensaje, se cancela)"
+window_title = "Información"
+button_1 = "Actualizar"
+button_2 = "Descargar"
+button_3 = "Abrir mod"
+[WINDOW-0006]
+info = "Esta pestaña no está disponible por la configuración actual."
+context = "Si quieres abrirla, edita el archivo de configuración y reinicia."
+window_title = "Información"
+button_1 = "OK"
+[WINDOW-0007]
+info = "Se reiniciaron los ajustes de {0} que usa la herramienta."
+context = "Puede que no se encuentre {0} o que sea una versión distinta a la última usada."
+window_title = "Advertencia"
+button_1 = "Sí"
+button_2 = "No"
+check_1 = "No volver a mostrar este mensaje."
+[WINDOW-0008]
+info = "¿Usar {0} para extraer el archivo {1}?"
+context = "Parece que tienes {0} instalado. ¿Quieres usarlo para extraer archivos \".{1}\"?\nUsarlo hace que la extracción sea más rápida."
+window_title = "Información"
+button_1 = "Sí"
+button_2 = "No"
+check_1 = "No volver a mostrar este mensaje."
+[WINDOW-0009]
+info = "Se reiniciaron los ajustes de {0} que usa la herramienta."
+context = "No se encuentra el {0} incluido.\nVuelve a descargar la herramienta.\n(Por ahora solo se admite la versión de {0} incluida.)"
+window_title = "Error"
+button_1 = "OK"
+[WINDOW-0010]
+info = "No se pudo extraer el archivo comprimido (SIZE_ZERO)"
+context = "El archivo o la carpeta comprimida tiene tamaño cero.\nSe detendrá el proceso."
+window_title = "Error"
+button_1 = "OK"
+[WINDOW-0011]
+info = "No se pudo extraer el archivo comprimido (SIZE_UNMATCH)"
+context = "La extracción terminó, pero es posible que no se haya extraído bien\nporque el tamaño no coincide con el original. \n¿Quieres continuar? \n\nSi este error aparece seguido, avísale al desarrollador."
+window_title = "Error"
+button_1 = "Sí"
+button_2 = "No"
+button_3 = "Abrir mod"
+[WINDOW-0012]
+info = "No se pudo extraer el archivo comprimido (EXCEPTION)"
+context = "Ocurrió un error inesperado al extraer el archivo."
+window_title = "Error"
+button_1 = "OK"
+[WINDOW-0013]
+info = "Falta el config.toml (NO_CONFIG_TOML)"
+context = "Se encontró algo inesperado en config.toml."
+window_title = "Error"
+button_1 = "OK"
+[WINDOW-0014]
+info = "Hay varios config.toml (MULTI_CONFIG_TOML)"
+context = "Hay config.toml en varias carpetas.\n¿Quieres continuar de todos modos?"
+window_title = "Advertencia"
+button_1 = "OK"
+button_2 = "Cancelar"
+button_3 = "Abrir mod"
+[WINDOW-0015]
+info = "No se pudo extraer el archivo comprimido (UNSUPPORTED)"
+context = "Formato no admitido. Los formatos admitidos son \"zip\", \"rar\" y \"7z\"."
+window_title = "Error"
+button_1 = "OK"
+[WINDOW-0016]
+info = "No se pudo extraer el archivo (DANGEROUS_FILE)"
+context = "Este archivo podría extraerse\nen una carpeta inesperada.\nLa herramienta no lo va a extraer.\n\nTen cuidado si lo extraes por tu cuenta."
+window_title = "Error"
+button_1 = "OK"
+[WINDOW-0017]
+info = "La estructura del mod no es correcta (CARPETA DUPLICADA)"
+context = "Puede haber carpetas duplicadas.\n¿Quieres moverlo a la carpeta mods\ncon la estructura correcta?\nElige No para cancelar y abrir la carpeta extraída."
+window_title = "Información"
+button_1 = "OK"
+button_2 = "No"
+[WINDOW-0018]
+info = "La estructura del mod no es correcta (hay archivos en la carpeta superior)"
+context = "No se pudo mover porque hay archivos y carpetas por encima de config.toml. \n¿Quieres borrar la carpeta extraída de la carpeta temporal?"
+window_title = "Error"
+button_1 = "OK"
+button_2 = "No"
+button_3 = "Abrir mod"
+[WINDOW-0019]
+info = "¿Quieres borrarla?"
+context = "¿Quieres borrar la carpeta extraída de la carpeta temporal?"
+window_title = "Información"
+button_1 = "OK"
+button_2 = "No"
+button_3 = "Abrir mod"
+[WINDOW-0020]
+info = "No se pudo guardar el archivo del mod (puede haber un enlace alternativo)"
+context = "Este mod puede tener otra fuente de descarga.\n¿Quieres abrir la página del mod?"
+window_title = "Información"
+button_1 = "OK"
+button_2 = "No"
+[WINDOW-0021]
+info = "¡Bienvenido a la pestaña {0}!"
+context = "Hay un botón misterioso, pero no tiene ningún uso para el usuario. \nEn este modo, al cerrar la herramienta se guarda un registro de texto que normalmente no se genera. \n(El registro se reinicia cada vez)"
+window_title = "Información"
+button_1 = "Ya lo sabía"
+button_2 = "No"
+[WINDOW-0022]
+info = "No se pudo escribir {0}"
+context = "Lo que ves en pantalla puede no coincidir con la configuración.\nIntenta de nuevo más tarde \no revisa que {0} no esté abierto en otro programa."
+window_title = "Error"
+button_1 = "OK"
+[WINDOW-0023]
+info = "La carpeta temporal es muy grande"
+context = "La carpeta temporal superó {0}.\n(Tamaño actual de la carpeta temporal: {1}\n\nPuedes cambiar el tamaño a partir del cual aparece este aviso en {2} de DMM."
+window_title = "Información"
+button_1 = "OK"
+[WINDOW-0024]
+info = "No hace nada."
+context = "Esta parte probablemente nunca se ejecuta y se está evaluando quitarla."
+window_title = "Información"
+button_1 = "OK"
+[WINDOW-0025]
+info = "Se superó el límite de uso de la API."
+context = "No se pudo descargar {0} usando la API.\n¿Quieres abrir la página de descarga de {0}?"
+window_title = "Información"
+button_1 = "Sí"
+button_2 = "No"
+[WINDOW-0026]
+info = "La configuración inicial todavía no está completa."
+context = "¿Quieres salir de la configuración?"
+window_title = "Información"
+button_1 = "Sí"
+button_2 = "No"
+[WINDOW-0027]
+info = "En desarrollo"
+context = "Esta función todavía está en desarrollo."
+window_title = "Advertencia"
+button_1 = "OK"
+[WINDOW-0029]
+info = "La configuración inicial todavía no está completa."
+context = "Esta pestaña no se puede abrir porque falta completar la configuración.\nRevisa el registro de abajo y completa la configuración."
+window_title = "Información"
+button_1 = "OK"
+[WINDOW-0030]
+info = "Ya existe una carpeta con el nombre del mod que intentas descargar."
+context = "Ya existe una carpeta con el nombre del mod que intentas descargar,\npero no se sabe si es el mismo mod o una versión distinta.\n¿Quieres continuar con la descarga?"
+window_title = "Información"
+button_1 = "Descargar"
+button_2 = "Cancelar"
+button_3 = "Abrir mod"
+[WINDOW-0031]
+info = "¿Intentas instalar {0}?"
+context = "Si estos datos son de {0}, se sobrescribirán en la carpeta indicada.\nSi no, se moverán a la misma carpeta que los mods normales."
+window_title = "Información"
+button_1 = "Sí"
+button_2 = "No"
+button_3 = "Abrir carpeta"
+[WINDOW-0032]
+info = "Abrir con el ejecutable"
+context = "Abre el ejecutable directamente"
+window_title = "Forma de abrir Project DIVA Mega Mix+"
+[WINDOW-0033]
+info = "Abrir con Steam"
+context = "Usa el acceso de Steam para abrir el juego"
+[WINDOW-0034]
+info = "Cancelar"
+[WINDOW-0035]
+info = "Antes de iniciar, haz una copia de seguridad de los archivos de configuración de DML y DMM.\nAl iniciar se reemplazarán los archivos de configuración.\nSi no sabes qué archivos respaldar, no lo inicies."
+window_title = "Versión de prueba"
+[WINDOW-0036]
+info = "¿Hiciste la copia de seguridad de los archivos de configuración? \nAl iniciar se reemplazarán. \n(Todavía estás a tiempo)"
+window_title = "¿Estás seguro?"
+[WINDOW-0037]
+info = "No volver a mostrar este mensaje."
+window_title = "No volver a mostrar este mensaje."
+[WINDOW-0038]
+info = "¿Quieres activar la instalación con un clic?"
+context = "¿Quieres activar la instalación con un clic\nde las páginas de GameBanana y DivaModArchive?\n(Se registrará en el registro de Windows)\n\nOtras herramientas también usan este registro (por ejemplo, Rust4diva)."
+window_title = "Información"
+button_1 = "Sí"
+button_2 = "No"
+[WINDOW-0039]
+info = "¡Se llegó a una parte del programa que no debería ejecutarse!"
+context = "La herramienta encontró una situación que no esperaba.\nSi este mensaje aparece seguido, avísale al desarrollador.\n\n(Lo sentimos, se interrumpirá el proceso.)"
+window_title = "Error"
+button_1 = "OK"
+[WINDOW-0040]
+info = "¡No hay mods en la lista!"
+context = "Prueba instalando uno o más mods."
+window_title = "Información"
+button_1 = "OK"
+[WINDOW-0041]
+info = "Borra la búsqueda de la lista de mods antes de continuar."
+window_title = "Información"
+[WINDOW-0042]
+info = "En este modo de depuración se abrirá un registro de texto al terminar correctamente. \nSi encuentras un error, nos ayudaría mucho que lo reproduzcas y le envíes el registro\nal desarrollador por mensaje privado. \n"
+context = "Nota: las rutas de carpetas que pueden tener datos personales se ocultan,\npero puede que no sea perfecto. \nRevisa el registro antes de enviarlo\npara asegurarte de que no tenga datos personales."
+window_title = "No te asustes."
+button_1 = "OK"
+check_1 = "No volver a mostrar este mensaje."
+[WINDOW-0043]
+info = "Esta herramienta necesita que esté instalado Hatsune Miku: Project DIVA Mega Mix+ (DivaMegaMix.exe).\nRevisa que esté instalado y vuelve a ejecutarla."
+window_title = "Error"
+[WINDOW-0044]
+info = "Lo sentimos, esta herramienta es solo para Windows.\n(Si de alguna forma te funcionó antes, cuéntanos los detalles)"
+window_title = "Error"
+[WINDOW-0045]
+info = "Lo sentimos, esta herramienta es solo para equipos de 64 bits.\n(Si de alguna forma te funcionó antes, cuéntanos los detalles)"
+window_title = "Error"
+[WINDOW-0046]
+info = "Usar {0}({1}) para extraer"
+context = "Extraer el archivo \".{2}\" con el {0}({1}) incluido."
+window_title = "Información"
+button_1 = "Sí"
+check_1 = "No volver a mostrar este mensaje."
+[WINDOW-0047]
+info = "Es posible que ya tengas el mod que intentas instalar."
+context = "La versión actual puede ser más nueva.\n¿Quieres reemplazar el mod actual por la versión anterior?\n¿O instalarlo como otro mod?\n(Versión actual: {0}, versión que intentas instalar: {1})"
+window_title = "Advertencia"
+button_1 = "Reemplazar"
+button_2 = "Instalar aparte"
+button_3 = "Abrir mod"
+[WINDOW-0048]
+info = "La versión actual de {0} puede ser igual o más nueva. \nSe detendrá el proceso."
+context = "Última actualización de la versión actual: {1}\nÚltima actualización de la versión que intentas instalar: {2}"
+window_title = "Error"
+button_1 = "OK"
+[WINDOW-0049]
+info = "Estás intentando instalar otra versión de {0}."
+context = "Este archivo ({1}) no es un archivo de mod normal y puede afectar al funcionamiento general del mod. \n¿Quieres actualizarlo?"
+window_title = "Información"
+button_1 = "Sí"
+button_2 = "No"
+[WINDOW-0050]
+info = "¡Un momento!"
+context = "La carpeta que intentas borrar\nsupera el tamaño configurado de {0}. \nRevisa que no se esté borrando una carpeta equivocada\npor un error de la herramienta. \n\nCarpeta que se va a borrar: {1}\nTamaño de la carpeta: {2}"
+window_title = "Advertencia"
+button_1 = "Sí"
+button_2 = "No"
+button_3 = "Abrir mod"
+[WINDOW-0051]
+info = "¿Quitar la instalación con un clic?"
+context = "¿Quieres quitar la instalación con un clic\nde las páginas de GameBanana y DivaModArchive?\n(Se quitará del registro de Windows)\n\nOtras herramientas también usan este registro (por ejemplo, Rust4diva)."
+window_title = "Información"
+button_1 = "Sí"
+button_2 = "No"
+[WINDOW-0052]
+info = "Proceso completado."
+context = "{0}"
+window_title = "Información"
+button_1 = "OK"
+[WINDOW-0053]
+info = "El proceso falló."
+context = "{0}"
+window_title = "Error"
+button_1 = "OK"
+[WINDOW-0054]
+info = "¡Se encontraron \"fuentes de descarga alternativas\" para {0}!"
+context = "¿Quieres continuar con la descarga? \nSi eliges \"No\", se abrirá la página del mod."
+window_title = "Información"
+button_1 = "Sí"
+button_2 = "No"
+[WINDOW-0055]
+info = "Se van a abrir {0} pestañas."
+context = "¿Está bien?"
+window_title = "Información"
+button_1 = "OK"
+button_2 = "Cancelar"
+[WINDOW-0056]
+info = "No hay archivos de mod en la carpeta."
+context = "Puede que este mod no haga nada aunque lo actives."
+window_title = "Advertencia"
+[WINDOW-0057]
+info = "Hay varios mods con el mismo contenido"
+context = "El contenido puede ser igual al de esta carpeta:\nNombre de la carpeta:\n{0}"
+window_title = "Advertencia"
+[WINDOW-0058]
+info = "Puede que no necesites este mod."
+context = "Lo que hace este mod ya está incluido en {0}, así que puede que ya no sea necesario. \nPara más información, revisa la página donde se publicó."
+window_title = "Advertencia"
+[WINDOW-0059]
+info = "Ten cuidado con tus datos de guardado."
+context = "Este mod usa un guardado aparte cuando está activado, así que puede parecer que tu guardado se borró."
+window_title = "Advertencia"
+[WINDOW-0060]
+info = "Agregar loadout nuevo"
+context = "Crea un loadout nuevo con todos los mods en el mismo estado que el actual, en orden alfabético"
+window_title = "Editar loadouts"
+[WINDOW-0061]
+info = "Renombrar loadout actual"
+context = "Cambia el nombre del loadout actual"
+[WINDOW-0062]
+info = "Borrar loadout actual"
+context = "Borra el loadout actual y cambia al primero disponible"
+[WINDOW-0063]
+info = "Copiar loadout actual"
+context = "Copia el loadout actual"
+[WINDOW-0064]
+info = "Se borrarán los {0} mods seleccionados. ¿Estás seguro? \nNota: se borrarán directamente, no irán a la Papelera.\n\nNo se puede deshacer."
+window_title = "Información"
+[WINDOW-0065]
+info = "Sí."
+context = "No se puede deshacer."
+window_title = "¿Quieres borrar el loadout actual?: {0}"
+[WINDOW-0066]
+info = "Hay un proceso en segundo plano."
+context = "No se puede hacer esto hasta que termine el proceso actual."
+window_title = "Información"
+button_1 = "OK"
+[WINDOW-0067]
+info = "No se puede cambiar la prioridad de los mods mientras hay una búsqueda. Lo sentimos."
+window_title = "Información"
+[WINDOW-0068]
+info = "¿Hacer copia de seguridad de la configuración?"
+context = "¿Quieres hacer una copia de seguridad\nde los archivos de configuración actuales (DMM, DML)? \n\nNota: no hay una función para cargar las copias automáticamente. \nSi un archivo de configuración se daña,\ntendrás que renombrar la copia a mano para restaurarla. \nNo se respaldan los archivos de configuración de cada mod."
+window_title = "Información"
+button_1 = "OK"
+button_2 = "Cancelar"
+[WINDOW-0069]
+info = "Léelo antes de preguntar."
+context = "Esta función se creó sobre todo para preguntarle a otros usuarios,\npero en general nadie conoce los \"conflictos entre varios mods\". \nTen en cuenta que los \"conflictos entre varios mods\"\nnormalmente los tienes que resolver tú. \n\nLo básico es desactivar todos los mods,\ny luego activarlos de a uno revisando que funcionen, hasta encontrar \"qué mod causa el conflicto\". \nSobre todo si tienes muchos mods activados, es común no recibir respuesta aunque pidas ayuda.\n\nConsejo: el botón Conflicts de la pestaña Mods muestra qué mods se pisan entre sí."
+window_title = "Advertencia"
+button_1 = "Entendido"
+check_1 = "No volver a mostrar este mensaje."
+[WINDOW-0070]
+info = "¿Volver a hacer la configuración inicial?"
+window_title = "Información"
+[WINDOW-0071]
+info = "DivaModLoader no está instalado."
+context = "Instala DivaModLoader arrastrando su archivo\no presionando el botón Core Update.\n(Si este error aparece incluso después de arrastrar DivaModLoader,\ninstálalo con el botón Core Update.)"
+window_title = "Advertencia"
+button_1 = "OK"
+[WINDOW-0072]
+info = "DivaModLoader no está instalado."
+context = "La transferencia se cortó a la mitad. \nSi quedó incompleta, descomprime el archivo a mano y colócalo en su lugar. \n\n(Carpeta del mod: \"{0}\", tiempo de transferencia: {1} segundos)"
+window_title = "Advertencia"
+button_1 = "OK"
+button_3 = "Abrir mod"
+[WINDOW-0073]
+info = "El nombre del mod tiene caracteres japoneses."
+context = "Si activas este mod, es posible que el juego no inicie.\nCambia el nombre de la carpeta."
+window_title = "Error"
+[WINDOW-0074]
+info = "Hay un proceso en segundo plano."
+context = "¿Quieres cerrar de todos modos?\nSi lo cierras a la fuerza, los archivos de los mods pueden quedar incompletos."
+window_title = "Información"
+button_1 = "Sí"
+button_2 = "No"
+[WINDOW-0075]
+info = "Se borrarán los {0} mods seleccionados. ¿Estás seguro?"
+window_title = "Información"
+[WINDOW-0076]
+info = "{0}"
+window_title = "Información de versión"
+button_1 = "OK"
+[WINDOW-0077]
+info = "No se encontró Hatsune Miku: Project DIVA Mega Mix+.\nSelecciona DivaMegaMix.exe"
+window_title = "Configuración inicial"
+button_1 = "OK"
+[WINDOW-0078]
+info = "Solo se hicieron pruebas básicas\nen entornos virtuales de Linux, macOS y Steam Deck,\npero no pruebas a fondo.\nAlgunas funciones pueden estar limitadas o ser inestables.\n\nÚsalo bajo tu propia responsabilidad."
+window_title = "Advertencia"
+button_1 = "OK"
+[WINDOW-0079]
+info = "La ruta del archivo extraído supera el límite de Windows (PATH_LENGTH_OVER_LIMIT)"
+context = "Este mod no se puede descomprimir porque la ruta de un archivo es demasiado larga.\n\nLímite estándar de Windows: {0} caracteres.\nLargo de la ruta: {1} caracteres.\n\nMueve la carpeta de la herramienta o pídele al autor del mod que acorte el nombre de la carpeta."
+window_title = "Error"
+button_1 = "OK"
+[WINDOW-0080]
+info = "Este mod tiene contenido para adultos. ¿Quieres continuar? (Solo para mayores de edad)"
+window_title = "Advertencia"
+button_1 = "Sí"
+button_2 = "No"
+[WINDOW-0081]
+info = "Este mod puede tener contenido que a algunas personas les resulte ofensivo o inapropiado. ¿Quieres continuar?"
+window_title = "Advertencia"
+button_1 = "Sí"
+button_2 = "No"
+[WINDOW-0082]
+info = "Se listarán las canciones de los mods activados."
+context = "Esto puede tardar bastante.\n¿Está bien?"
+window_title = "Advertencia"
+button_1 = "Sí"
+button_2 = "Cancelar"
+[WINDOW-0083]
+info = "Se listarán los módulos de los mods activados."
+context = "Esto puede tardar bastante.\n¿Está bien?"
+window_title = "Advertencia"
+button_1 = "Sí"
+button_2 = "Cancelar"
+[WINDOW-0084]
+info = "¿Tienes MikuMikuLibrary instalado?"
+context = "Para mostrar los {0} originales de Hatsune Miku: Project DIVA Mega Mix+, hay que extraer los datos originales con MikuMikuLibrary (MikuMikuLibrary.dll).\n¿Tienes MikuMikuLibrary (MikuMikuLibrary.dll) instalado?"
+window_title = "Información"
+button_1 = "Sí"
+button_2 = "No\n(No mostrar los datos originales)"
+button_3 = "Descargar MML\n(Abrir GitHub)"
+[WINDOW-0085]
+info = "Descarga el último MikuMikuModel.7z."
+context = "MikuMikuLibrary.dll normalmente viene dentro de MikuMikuModel.7z.\nDespués de descargarlo, continúa con la configuración."
+window_title = "Información"
+button_1 = "OK"
+[WINDOW-0086]
+info = "¿Quieres extraer los datos necesarios de Hatsune Miku: Project DIVA Mega Mix+?"
+context = "Los datos extraídos se guardarán en la carpeta {0} de esta herramienta.\nEste proceso no modifica los datos del juego."
+window_title = "Información"
+button_1 = "Sí"
+button_2 = "No"
+[WINDOW-0087]
+info = "¿Te diste cuenta?"
+context = "¡Puedes apoyar el desarrollo con el ícono de regalo de arriba a la derecha!\n¡Una donación única, no mensual, también es muy bienvenida!\n(¡Sí, a la derecha del ícono de Discord!)"
+window_title = "¡Se busca apoyo!"
+button_1 = "Si me dan ganas."
+button_2 = "Algún día."
+check_1 = "No volver a mostrar este mensaje."
+[WINDOW-0088]
+info = "¿Qué versión quieres descargar?"
+window_title = "Elegir actualización"
+[WINDOW-0089]
+info = "No se pudo detectar la actualización adecuada."
+context = "Lo sentimos, descarga y actualiza a mano desde la página de versiones."
+window_title = "No se pudo detectar automáticamente."
+button_1 = "Abrir página de GitHub"
+button_2 = "Cerrar"
+[WINDOW-0090]
+info = "Terminó la descarga de la actualización."
+context = "Se extrajo en \"{0}\". \nReemplaza a mano los archivos de la aplicación."
+window_title = "Actualización descargada."
+button_1 = "Abrir carpeta"
+button_2 = "Cerrar"

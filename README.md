@@ -38,7 +38,11 @@ A community fork of [DivaModManager by Enomoto](https://github.com/enomoto-r02/D
 - Heart button and **Favorites** filter in the GameBanana and DivaModArchive tabs.
 - Fixed the author shown twice on DivaModArchive cards and the category icon overlapping its name on GameBanana cards.
 
+**Language**
+- Spanish translation (Option tab, Language / Idioma).
+
 **Other**
+- Downloaded archives are deleted after installing instead of filling the Recycle Bin.
 - The self-updater and GitHub button point to this repository.
 - Fixed the wrong title of the Settings BackUp dialog.
 

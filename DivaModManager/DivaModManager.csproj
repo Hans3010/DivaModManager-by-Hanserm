@@ -97,6 +97,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Resource Include="Assets\dummy.png" />
+    <EmbeddedResource Include="Resources\Message_es.toml" />
     <EmbeddedResource Include="Resources\Message.toml">
       <CopyToOutputDirectory></CopyToOutputDirectory>
     </EmbeddedResource>
