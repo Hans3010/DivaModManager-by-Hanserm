@@ -82,6 +82,15 @@ namespace DivaModManager.Common.Helpers
                     var fullPath = Path.GetFullPath(deleteFilePath);
                     Logger.WriteLine($"DeleteFile: File info for '{deleteFilePath}': fullPath='{fullPath}', Attributes={info.Attributes}, LinkTarget={info.LinkTarget ?? "null"}", LoggerType.Debug);
 
+                    // 解凍用の一時フォルダ(temp_)内はインストール済みModのコピーなので、ごみ箱に送らず直接削除する
+                    // （数千ファイル・数GBがごみ箱に溜まり、1ファイルずつの処理で非常に遅くなっていた）
+                    if (IsInExtractTempDirectory(fullPath))
+                    {
+                        System.IO.File.SetAttributes(deleteFilePath, FileAttributes.Normal);
+                        System.IO.File.Delete(deleteFilePath);
+                        return true;
+                    }
+
                     ret = Application.Current.Dispatcher.Invoke(() =>
                     {
                         if (Global.IsWine)
@@ -381,6 +390,15 @@ namespace DivaModManager.Common.Helpers
         /// </summary>
         /// <param name="targetPath">チェック対象パス</param>
         /// <returns></returns>
+        /// <summary>
+        /// DMM/Downloads/temp_xxx（解凍用の一時フォルダ）配下か
+        /// </summary>
+        public static bool IsInExtractTempDirectory(string fullPath)
+        {
+            var tempPrefix = Path.GetFullPath(Path.Combine(Global.assemblyLocation, "Downloads", "temp_"));
+            return StartsWith(Path.GetFullPath(fullPath), tempPrefix);
+        }
+
         public static DIVA_PATH_RESULT IsDivaModFileOrDirectory(string targetPath, [CallerMemberName] string caller = "")
         {
             string MeInfo = Logger.GetMeInfo(new StackFrame());
@@ -477,9 +495,13 @@ namespace DivaModManager.Common.Helpers
                 Path.GetFullPath(Path.Combine(Global.temporaryLocationDML, "temp_")));
 
             // 削除判定の順番は重要なので注意(上位のフォルダほどチェックは後に！)
+            // 以前は次の行が "else if" ではなく "if" だったため、temp_ ディレクトリの判定が
+            // 後続の checkDownloadFileResult で NOT に上書きされ、解凍用の一時フォルダが一切削除されなかった
+            // temp_ 内のファイルは従来どおり Downloads 配下のファイル(DOWNLOAD_MOD_FILE)として扱う
             if (checkTmpDirectoryResult)
-                ret = Directory.Exists(targetFullPath) ? DIVA_PATH_RESULT.TEMP_DIRECTORY : DIVA_PATH_RESULT.NOT;
-            if (checkDmaCacheDirectoryResult || checkGbCacheDirectoryResult || checkImageCacheDirectoryResult)
+                ret = Directory.Exists(targetFullPath) ? DIVA_PATH_RESULT.TEMP_DIRECTORY
+                    : File.Exists(targetFullPath) ? DIVA_PATH_RESULT.DOWNLOAD_MOD_FILE : DIVA_PATH_RESULT.NOT;
+            else if (checkDmaCacheDirectoryResult || checkGbCacheDirectoryResult || checkImageCacheDirectoryResult)
                 ret = DIVA_PATH_RESULT.DMM_CACHE;
             else if (checkDmlTmpDirectoryResult)
                 ret = Directory.Exists(targetFullPath) ? DIVA_PATH_RESULT.DML_TEMP_DIRECTORY : DIVA_PATH_RESULT.DML_TEMP_FILE;
@@ -1498,6 +1520,9 @@ namespace DivaModManager.Common.Helpers
                     var fullPath = Path.GetFullPath(path);
                     Logger.WriteLine($"DeleteDirectoryRecursiveSafe: Directory info for '{path}': fullPath='{fullPath}', Attributes={info.Attributes}, LinkTarget={info.LinkTarget ?? "null"}", LoggerType.Debug);
 
+                    // アーカイブ由来で読み取り専用属性が付いたフォルダは、そのままでは削除できない（Access denied）
+                    if ((info.Attributes & FileAttributes.ReadOnly) != 0)
+                        info.Attributes &= ~FileAttributes.ReadOnly;
                     Directory.Delete(path);
                     Logger.WriteLine($"DeleteDirectoryRecursiveSafe: Directory info for '{path}'", LoggerType.Debug);
                 }

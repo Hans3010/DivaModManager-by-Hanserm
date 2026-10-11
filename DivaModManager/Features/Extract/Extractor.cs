@@ -13,9 +13,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 using Tomlyn;
 using Tomlyn.Model;
 using static DivaModManager.Common.Helpers.WindowHelper;
@@ -1599,12 +1601,14 @@ namespace DivaModManager.Features.Extract
                 if (pathResult != EXTRACT_RESULT.NONE)
                 {
                     extract.MoveInfoList.LastOrDefault().Result = pathResult;
-                    extract.MoveInfoList.LastOrDefault().ErrorFilePathList.Add(fullDest);
+                    // パス長エラーの場合は、ゲームが実際に読み込む mods フォルダでのパスを報告する
+                    var reportPath = pathResult == EXTRACT_RESULT.PATH_LENGTH_OVER_LIMIT ? GetInstalledPath(fullDest, fullRoot) : fullDest;
+                    extract.MoveInfoList.LastOrDefault().ErrorFilePathList.Add(reportPath);
 
                     Logger.WriteLine(
                         $"{Path.GetFileName(mv.FullPath)},{entry}," +
                         $"{extract.UseExtractComponentZipSlipCheck}," +
-                        $"Blocked File Path,{fullDest}",
+                        $"Blocked File Path,{reportPath}",
                         LoggerType.Info,
                         param: ParamInfo);
 
@@ -1986,31 +1990,64 @@ namespace DivaModManager.Features.Extract
                     extractSevenZipProcess.Exited += new EventHandler(ExtractComplete);
 
                     // 7z.exe実行(Extract)
+                    // 以前は標準出力/標準エラーをリダイレクトしたまま終了まで読み取っていなかったため、
+                    // 大きいアーカイブでは -bsp1 の進捗出力でパイプが満杯になり、7z.exe と DMM が互いに待ち続けて止まっていた
+                    var archiveName = Path.GetFileName(mv.FullPath);
+                    var progressBox = App.Current.Dispatcher.Invoke(() =>
+                    {
+                        var box = new ExtractProgress(0, 100);
+                        box.SetIndeterminate(archiveName);
+                        box.Show();
+                        return box;
+                    });
+                    var stdErr = new StringBuilder();
+                    extractSevenZipProcess.ErrorDataReceived += (_, e) => { if (e.Data != null) lock (stdErr) { stdErr.AppendLine(e.Data); } };
                     extractSevenZipProcess.Start();
-                    Thread.Sleep(500);
-                    extractSevenZipProcess.WaitForExit();
+                    extractSevenZipProcess.BeginErrorReadLine();
+                    var stdOutTask = ReadSevenZipProgressAsync(extractSevenZipProcess.StandardOutput, percent =>
+                        App.Current.Dispatcher.BeginInvoke(() => progressBox.SetProgress(percent, archiveName)));
 
-                    // Wine実行環境などで反映が遅れる場合があるため、少し待つ
-                    // 7z.exe側の問題の可能性が高いので、ログ出力以外不要かも
+                    try
+                    {
+                        // UIスレッドから呼ばれた場合は画面が固まらないようにメッセージを処理しながら待つ
+                        var onUiThread = App.Current.Dispatcher.CheckAccess();
+                        while (!extractSevenZipProcess.WaitForExit(onUiThread ? 50 : 500))
+                        {
+                            if (onUiThread)
+                                DoEvents();
+                            if (progressBox.CancelToken.IsCancellationRequested)
+                            {
+                                KillChildProcess(extractSevenZipProcess);
+                                throw new OperationCanceledException();
+                            }
+                        }
+                        extractSevenZipProcess.WaitForExit(); // 非同期読み取りの完了を待つ
+                        stdOutTask.Wait(TimeSpan.FromSeconds(5));
+                    }
+                    finally
+                    {
+                        App.Current.Dispatcher.Invoke(() => progressBox.CloseFinished());
+                    }
+
                     Logger.WriteLine(string.Join(" ", MeInfo, $"7z ExitCode:{extractSevenZipProcess.ExitCode}"), LoggerType.Debug, param: ParamInfo);
 
                     if (extractSevenZipProcess.ExitCode != 0)
                     {
-                        Logger.WriteLine(string.Join(" ", MeInfo, $"7z ErrorMessage:{extractSevenZipProcess.StandardError.ReadToEnd()}"), LoggerType.Debug, param: ParamInfo);
+                        string errorText;
+                        lock (stdErr) { errorText = stdErr.ToString(); }
+                        Logger.WriteLine(string.Join(" ", MeInfo, $"7z ErrorMessage:{errorText}"), LoggerType.Debug, param: ParamInfo);
                     }
 
+                    // Wine実行環境などで反映が遅れる場合があるため、展開先にファイルが見えるまで少し待つ
+                    // （以前は mv.FullPathResult(文字列).Any() で判定していたため常に1秒で抜けていた）
                     for (int i = 0; i < 20; i++)
                     {
-                        Thread.Sleep(1000);
-
-                        if (mv.FullPathResult.Any())
+                        mv.FullPathResultInfo = FileHelper.GetFilesAndDirectoriesCount(mv.FullPathResult, extract.SkipFileWhenSizeCheckPathList);
+                        if (mv.FullPathResultInfo.Any())
                             break;
 
                         Logger.WriteLine(string.Join(" ", MeInfo, $"i:{i}, mv.FullPathResult:{mv.FullPathResult}"), LoggerType.Debug, param: ParamInfo);
-                        mv.FullPathResultInfo = FileHelper.GetFilesAndDirectoriesCount(mv.FullPathResult, extract.SkipFileWhenSizeCheckPathList);
-
-                        if (mv.FullPathResultInfo.Any())
-                            break;
+                        Thread.Sleep(1000);
                     }
 
                     //mv.FileAndDirectoryCountResult = FileHelper.GetFilesAndDirectoriesCount(mv.FullPathResult, extract.SkipFileWhenSizeCheckPathList);
@@ -2064,7 +2101,43 @@ namespace DivaModManager.Features.Extract
         }
 
         /// <summary>
-        /// 
+        /// 7z.exe の標準出力（-bsp1 の進捗）を読み続け、パーセンテージを通知する
+        /// 進捗は改行ではなくバックスペースで上書きされるため、行単位ではなくチャンク単位で読む
+        /// </summary>
+        private static Task ReadSevenZipProgressAsync(StreamReader output, Action<double> onProgress)
+        {
+            return Task.Run(async () =>
+            {
+                var buffer = new char[4096];
+                var lastPercent = -1;
+                int read;
+                while ((read = await output.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                {
+                    var matches = Regex.Matches(new string(buffer, 0, read), @"(\d{1,3})%");
+                    if (matches.Count == 0)
+                        continue;
+                    if (int.TryParse(matches[^1].Groups[1].Value, out var percent) && percent != lastPercent)
+                    {
+                        lastPercent = percent;
+                        onProgress(percent);
+                    }
+                }
+            });
+        }
+
+        /// <summary>
+        /// UIスレッドで同期的に待機している間も画面の描画・入力を処理する
+        /// </summary>
+        private static void DoEvents()
+        {
+            var frame = new DispatcherFrame();
+            Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Background,
+                new DispatcherOperationCallback(f => { ((DispatcherFrame)f).Continue = false; return null; }), frame);
+            Dispatcher.PushFrame(frame);
+        }
+
+        /// <summary>
+        ///
         /// </summary>
         /// <returns></returns>
         private static bool DeleteTemporaryDirectory(ExtractInfo extract, [CallerMemberName] string caller = "")
@@ -2104,6 +2177,16 @@ namespace DivaModManager.Features.Extract
         /// <param name="fullDest"></param>
         /// <param name="fullRoot"></param>
         /// <returns></returns>
+        /// <summary>
+        /// 一時フォルダ上のパスを、mods フォルダに配置された後のパスに変換する（mods フォルダ未設定時はそのまま）
+        /// </summary>
+        private static string GetInstalledPath(string fullDest, string fullRoot)
+        {
+            if (string.IsNullOrEmpty(Global.ModsFolder))
+                return fullDest;
+            return Path.Combine(Path.GetFullPath(Global.ModsFolder), Path.GetRelativePath(fullRoot, fullDest));
+        }
+
         private static EXTRACT_RESULT IsDangerousPath(string fullDest, string fullRoot)
         {
             // 正規化
@@ -2115,9 +2198,11 @@ namespace DivaModManager.Features.Extract
                 return EXTRACT_RESULT.DANGEROUS_FILE;
 
             // 長いパス拒否
-            // MAX_PATH を少し余裕持って制限
+            // 以前は一時フォルダ(DMM/Downloads/temp_xxx)上のパス長で判定していたため、DMMを深い階層に置くだけで
+            // 実際にはゲームで問題なく使えるModも解凍できなかった。
+            // .NET と 7z.exe は長いパスを扱えるので、ゲームが読み込む最終的な配置先(mods フォルダ)でのパス長で判定する
             var maxPath = OperatingSystem.IsWindows() ? PATH_LENGTH_LIMIT_WINDOWS : PATH_LENGTH_LIMIT_LINUX;
-            if (fullDest.Length >= maxPath)
+            if (GetInstalledPath(fullDest, fullRoot).Length >= maxPath)
                 return EXTRACT_RESULT.PATH_LENGTH_OVER_LIMIT;
 
             // UNC拒否 (Windowsのみ)
