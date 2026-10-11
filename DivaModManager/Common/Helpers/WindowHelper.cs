@@ -300,7 +300,12 @@ namespace DivaModManager.Common.Helpers
             WindowInfo info = WindowList.MessageWindowNo(message_no);
             info.replaceList = replaceList;
             MessageBoxResult ret;
-            if (window == null)
+            if (Application.Current?.MainWindow is MainWindow)
+            {
+                // メイン画面の表示後は、ほかのメッセージと同じ見た目のウィンドウで表示する
+                ret = Application.Current.Dispatcher.Invoke(() => StyledMessageBox(info, type));
+            }
+            else if (window == null)
             {
                 ret = MessageBox.Show(info.Info(), $"{info.WindowTitle()}", type, icon);
             }
@@ -312,5 +317,31 @@ namespace DivaModManager.Common.Helpers
             Logger.WriteLine(string.Join(" ", MeInfo, $"Start.", $"Return:{ret}"), LoggerType.Debug, param: ParamInfo);
             return ret;
         }
+
+        private static MessageBoxResult StyledMessageBox(WindowInfo info, MessageBoxButton type)
+        {
+            var title = $"[{info.WindowId()}] {info.WindowTitle()}";
+            var owner = Application.Current.MainWindow;
+            if (type == MessageBoxButton.YesNo || type == MessageBoxButton.OKCancel)
+            {
+                var yesNo = type == MessageBoxButton.YesNo;
+                var window = new DmmMessageWindowYesNo(info.Info(), info.Context(), title) { Owner = owner };
+                window.Button_1.Content = ButtonText(yesNo ? "Yes" : "OK", yesNo ? "はい" : "OK");
+                window.Button_2.Content = ButtonText(yesNo ? "No" : "Cancel", yesNo ? "いいえ" : "キャンセル");
+                window.ShowDialog();
+                if (window.YesNo) return yesNo ? MessageBoxResult.Yes : MessageBoxResult.OK;
+                return yesNo ? MessageBoxResult.No : MessageBoxResult.Cancel;
+            }
+            var ok = new DmmMessageWindowOK(info.Info(), info.Context(), title, true) { Owner = owner };
+            ok.MessageInfo.Text = info.Info();
+            ok.MessageText.Text = info.Context();
+            if (string.IsNullOrEmpty(ok.MessageText.Text)) ok.MessageText.Visibility = Visibility.Collapsed;
+            ok.Button_1.Content = ButtonText("OK", "OK");
+            ok.ShowDialog();
+            return MessageBoxResult.OK;
+        }
+
+        private static string ButtonText(string english, string japanese) =>
+            Global.ConfigToml?.Language == "JP" ? japanese : UiTranslator.T(english);
     }
 }

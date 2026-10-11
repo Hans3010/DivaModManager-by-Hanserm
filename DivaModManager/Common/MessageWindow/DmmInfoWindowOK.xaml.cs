@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using DivaModManager.Common.Helpers;
+using System.Windows;
 using System.Windows.Input;
 
 namespace DivaModManager.Common.MessageWindow
@@ -10,6 +11,20 @@ namespace DivaModManager.Common.MessageWindow
     {
         public bool OK = false;
         public bool IsCancel = true;
+        private string linkUrl;
+
+        /// <summary>2つ目のボタンでリンク（パッチノートなど）を開けるようにする</summary>
+        public void ShowLinkButton(string text, string url)
+        {
+            linkUrl = url;
+            Button_2.Content = text;
+            Button_2.Visibility = Visibility.Visible;
+        }
+
+        private void Link_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(linkUrl)) ProcessHelper.TryStartProcess(linkUrl);
+        }
 
         public DmmInfoWindowOK(string strInfo, string strText, string title, bool ok = false)
         {

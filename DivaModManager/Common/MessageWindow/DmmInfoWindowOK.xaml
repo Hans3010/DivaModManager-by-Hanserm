@@ -16,6 +16,9 @@
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <TextBlock Name="InfoText" HorizontalAlignment="Center" Grid.ColumnSpan="3" Grid.Row="0" VerticalAlignment="Center" Text="Info Text" Foreground="#f2f2f2" FontSize="18" FontWeight="SemiBold" TextAlignment="Center" Margin="50,8,50,8"/>
-        <Button Name="Button_1" Grid.Row="1" Grid.Column="0" Content="OK" VerticalAlignment="Center" HorizontalContentAlignment="Center" MinWidth="120" MinHeight="35" FontSize="18" FontWeight="SemiBold" Foreground="#f2f2f2" Background="#494949" Margin="30,8,30,8" Click="OK_Click"/>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Name="Button_2" Content="Patch notes" Visibility="Collapsed" VerticalAlignment="Center" HorizontalContentAlignment="Center" MinWidth="160" MinHeight="35" FontSize="18" FontWeight="SemiBold" Foreground="#f2f2f2" Background="#494949" Margin="30,8,0,8" Padding="12,0" Click="Link_Click"/>
+            <Button Name="Button_1" Content="OK" VerticalAlignment="Center" HorizontalContentAlignment="Center" MinWidth="120" MinHeight="35" FontSize="18" FontWeight="SemiBold" Foreground="#f2f2f2" Background="#494949" Margin="30,8,30,8" Click="OK_Click"/>
+        </StackPanel>
     </Grid>
 </Window>

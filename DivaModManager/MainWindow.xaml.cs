@@ -3851,7 +3851,13 @@ namespace DivaModManager
         private void InfoText_Click(object sender, RoutedEventArgs e)
         {
             List<string> replaceList = new() { InfoText.ToString() };
-            var resultWindow = WindowHelper.DMMWindowOpenAsync(76, replaceList);
+            var info = WindowList.MessageWindowNo(76, replaceList);
+            var window = new DmmInfoWindowOK(info.Info(), info.Context(), $"[{info.WindowId()}] {info.WindowTitle()}", true) { Owner = this };
+            window.Button_1.Content = info.Button_1();
+            // このバージョンのリリースノート（GitHub）を開く
+            window.ShowLinkButton(Global.ConfigToml?.Language == "JP" ? "パッチノート" : UiTranslator.T("Patch notes"),
+                $"{DMMUpdater.RELEASES_URL}/tag/v{App.Version}");
+            window.ShowDialog();
         }
 
         private void MMPFolder_Click(object sender, RoutedEventArgs e)

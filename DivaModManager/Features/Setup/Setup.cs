@@ -3,7 +3,9 @@ using DivaModManager.Common.Helpers;
 using DivaModManager.Features.Debug;
 using Microsoft.Win32;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace DivaModManager.Features.Setup
 {
@@ -19,8 +21,11 @@ namespace DivaModManager.Features.Setup
                 if (OperatingSystem.IsWindows() && !Global.IsWine)
                 {
                     var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 1761390");
-                    if (!string.IsNullOrEmpty(key.GetValue("InstallLocation") as string))
+                    if (!string.IsNullOrEmpty(key?.GetValue("InstallLocation") as string))
                         defaultPath = $"{key.GetValue("InstallLocation") as string}{Global.s}DivaMegaMix.exe";
+                    // InstallLocation が空のことがあるので、Steam のライブラリフォルダからも探す
+                    if (!File.Exists(defaultPath))
+                        defaultPath = FindInSteamLibraries(exe) ?? defaultPath;
                 }
                 else
                 {
@@ -99,6 +104,37 @@ namespace DivaModManager.Features.Setup
                 ConfigJson.UpdateConfig();
             }
             return true;
+        }
+
+        /// <summary>Steam の libraryfolders.vdf に書かれた各ライブラリの common フォルダからゲームを探す</summary>
+        private static string FindInSteamLibraries(string exe)
+        {
+            try
+            {
+                var steamPath = Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam")?.GetValue("SteamPath") as string;
+                if (string.IsNullOrEmpty(steamPath)) return null;
+                var libraries = new List<string> { steamPath };
+                var vdf = Path.Combine(steamPath, "steamapps", "libraryfolders.vdf");
+                if (File.Exists(vdf))
+                {
+                    foreach (Match m in Regex.Matches(File.ReadAllText(vdf), @"""path""\s+""([^""]+)"""))
+                        libraries.Add(m.Groups[1].Value.Replace(@"\\", @"\"));
+                }
+                foreach (var library in libraries)
+                {
+                    var path = Path.Combine(library, "steamapps", "common", "Hatsune Miku Project DIVA Mega Mix Plus", exe);
+                    if (File.Exists(path))
+                    {
+                        Logger.WriteLine($"Found {exe} in Steam library: {path}", LoggerType.Info);
+                        return Path.GetFullPath(path);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.WriteLine($"Couldn't search Steam libraries ({e.Message})", LoggerType.Warning);
+            }
+            return null;
         }
     }
 }
