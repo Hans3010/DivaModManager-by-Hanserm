@@ -202,7 +202,7 @@ namespace DivaModManager.Features.DML
                     downloadPath, System.IO.FileMode.Create, FileAccess.Write, FileShare.None))
                 {
                     var client = new HttpClient() { Timeout = TimeSpan.FromSeconds(Global.ConfigToml.GitHubApiTimeoutSec) };
-                    await client.DownloadAsync(uri, fs, fileName, progress, cancellationToken.Token);
+                    await client.DownloadAsync(uri, fs, fileName, progress, cancellationToken.Token, progressBox.EnablePause());
                 }
                 progressBox.Close();
                 var outputPath = Path.GetDirectoryName(Global.ConfigJson.Configs[Global.ConfigJson.CurrentGame].Launcher);
@@ -245,8 +245,7 @@ namespace DivaModManager.Features.DML
             progressBox.progressBar.Value = progress.Percentage * 100;
             progressBox.taskBarItem.ProgressValue = progress.Percentage;
             progressBox.progressTitle.Text = $"Downloading {progress.FileName}...";
-            progressBox.progressText.Text = $"{Math.Round(progress.Percentage * 100, 2)}% " +
-                $"({StringConverters.FormatSize(progress.DownloadedBytes)} of {StringConverters.FormatSize(progress.TotalBytes)})";
+            progressBox.progressText.Text = progress.ToDisplayText();
         }
     }
 }

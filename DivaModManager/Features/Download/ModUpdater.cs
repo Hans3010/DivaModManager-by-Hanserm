@@ -240,8 +240,7 @@ namespace DivaModManager.Features.Download
             progressBox.progressBar.Value = progress.Percentage * 100;
             progressBox.taskBarItem.ProgressValue = progress.Percentage;
             progressBox.progressTitle.Text = $"Downloading {progress.FileName}...";
-            progressBox.progressText.Text = $"{Math.Round(progress.Percentage * 100, 2)}% " +
-                $"({StringConverters.FormatSize(progress.DownloadedBytes)} of {StringConverters.FormatSize(progress.TotalBytes)})";
+            progressBox.progressText.Text = progress.ToDisplayText();
         }
         // clean update for gamebanana
         private static async Task ModCleanUpdateGB(GameBananaAPIV4 item, string mod, Metadata metadata, Progress<DownloadProgress> progress, CancellationTokenSource cancellationToken, Func<ExtractInfo, Task> onExtractAsync = null, [CallerMemberName] string caller = "")
@@ -434,7 +433,7 @@ namespace DivaModManager.Features.Download
                         filePath, FileMode.Create, FileAccess.Write, FileShare.None))
                     {
                         var client = new HttpClient() { Timeout = TimeSpan.FromSeconds(Global.ConfigToml.GameBananaApiTimeoutSec) };
-                        await client.DownloadAsync(uri, fs, fileName, progress, cancellationToken.Token);
+                        await client.DownloadAsync(uri, fs, fileName, progress, cancellationToken.Token, progressBox.EnablePause());
                     }
                     progressBox.Close();
 
@@ -511,7 +510,7 @@ namespace DivaModManager.Features.Download
                         Path.Combine(Global.assemblyLocation, "Downloads", fileName), FileMode.Create, FileAccess.Write, FileShare.None))
                     {
                         var client = new HttpClient() { Timeout = TimeSpan.FromSeconds(Global.ConfigToml.DivaModArchiveApiTimeoutSec) };
-                        await client.DownloadAsync(uri, fs, fileName, progress, cancellationToken.Token);
+                        await client.DownloadAsync(uri, fs, fileName, progress, cancellationToken.Token, progressBox.EnablePause());
                     }
                     progressBox.Close();
 

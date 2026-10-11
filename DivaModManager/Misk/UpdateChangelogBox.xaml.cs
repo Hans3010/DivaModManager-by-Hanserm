@@ -3,6 +3,7 @@ using DivaModManager.Models;
 using Microsoft.Win32;
 using Octokit;
 using System;
+using System.Linq;
 using System.Media;
 using System.Net.Http;
 using System.Text.RegularExpressions;
@@ -91,7 +92,7 @@ namespace DivaModManager.Misk
             }
             else
             {
-                PreviewImage.Source = new BitmapImage(new Uri("pack://application:,,,/DivaModManager;component/Assets/preview_enomoto.png"));
+                PreviewImage.Source = new BitmapImage(new Uri("pack://application:,,,/DivaModManager;component/Assets/preview_hanserm.png"));
                 PreviewImage.Visibility = Visibility.Visible;
             }
             Title = $"{packageName} Changelog";
@@ -109,12 +110,10 @@ namespace DivaModManager.Misk
                 Grid.SetColumnSpan(NoButton, 2);
             }
 
-            App.Current.Dispatcher.InvokeAsync(async () =>
-            {
-                var fileSize = await GetFileSize(Global.GitHubclient, release.Url);
-                if (fileSize == null) { SizeLabel.Visibility = Visibility.Collapsed; }
-                else { SizeLabel.Text = $"File Size(about) : {fileSize}"; }
-            });
+            // release.Url はリリース情報(JSON)のURLのため、そのサイズではなくアセットのサイズを表示する
+            var asset = release.Assets?.FirstOrDefault();
+            if (asset == null) { SizeLabel.Visibility = Visibility.Collapsed; }
+            else { SizeLabel.Text = $"File Size(about) : {FileHelper.GetDirectorySizeView2(asset.Size)}"; }
             PlayNotificationSound();
         }
 
@@ -162,7 +161,15 @@ namespace DivaModManager.Misk
                 Grid.SetColumnSpan(YesButton, 2);
                 Grid.SetColumnSpan(NoButton, 2);
             }
-            SizeLabel.Text = $"File Size(about) : {GetFileSize(Global.DMAclient, post.Files[0].ToString())}";
+            // 以前は Task を await せずに文字列化していたため、サイズの代わりに型名が表示されていた
+            App.Current.Dispatcher.InvokeAsync(async () =>
+            {
+                string fileSize = null;
+                try { fileSize = await GetFileSize(Global.DMAclient, post.Files[0].ToString()); }
+                catch (Exception) { }
+                if (fileSize == null) { SizeLabel.Visibility = Visibility.Collapsed; }
+                else { SizeLabel.Text = $"File Size(about) : {fileSize}"; }
+            });
             PlayNotificationSound();
         }
         private async Task<string> GetFileSize(HttpClient client, string url)

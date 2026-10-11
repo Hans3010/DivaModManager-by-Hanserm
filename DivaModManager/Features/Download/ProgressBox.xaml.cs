@@ -1,6 +1,8 @@
-﻿using System.ComponentModel;
+using DivaModManager.Features.Download;
+using System.ComponentModel;
 using System.Threading;
 using System.Windows;
+using System.Windows.Shell;
 
 namespace DivaModManager
 {
@@ -10,11 +12,41 @@ namespace DivaModManager
     public partial class ProgressBox : Window
     {
         private CancellationTokenSource cancellationTokenSource;
+        private readonly PauseTokenSource pauseTokenSource = new();
         public bool finished = false;
         public ProgressBox(CancellationTokenSource cancellationTokenSource)
         {
             InitializeComponent();
             this.cancellationTokenSource = cancellationTokenSource;
+        }
+
+        /// <summary>
+        /// 一時停止ボタンを表示し、ダウンロードに渡す PauseToken を返す
+        /// </summary>
+        public PauseToken EnablePause()
+        {
+            if (PauseButton.Visibility != Visibility.Visible)
+            {
+                PauseButton.Visibility = Visibility.Visible;
+                Height += 40;
+            }
+            return pauseTokenSource.Token;
+        }
+
+        private void PauseButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (pauseTokenSource.IsPaused)
+            {
+                pauseTokenSource.Resume();
+                PauseButton.Content = "Pause";
+                taskBarItem.ProgressState = TaskbarItemProgressState.Normal;
+            }
+            else
+            {
+                pauseTokenSource.Pause();
+                PauseButton.Content = "Resume";
+                taskBarItem.ProgressState = TaskbarItemProgressState.Paused;
+            }
         }
 
         private void ProgressBar_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

@@ -395,8 +395,7 @@ namespace DivaModManager.Features.Download
             progressBox.progressBar.Value = progress.Percentage * 100;
             progressBox.taskBarItem.ProgressValue = progress.Percentage;
             progressBox.progressTitle.Text = $"Downloading {progress.FileName}...";
-            progressBox.progressText.Text = $"{Math.Round(progress.Percentage * 100, 2)}% " +
-                $"({StringConverters.FormatSize(progress.DownloadedBytes)} of {StringConverters.FormatSize(progress.TotalBytes)})";
+            progressBox.progressText.Text = progress.ToDisplayText();
         }
 
         private bool ParseProtocol(string line)
@@ -475,7 +474,7 @@ namespace DivaModManager.Features.Download
                     {
                         Timeout = TimeSpan.FromSeconds(Global.ConfigToml.DivaModArchiveApiTimeoutSec),
                     };
-                    await client.DownloadAsync(uri, fs, fileName, progress, cancellationToken.Token);
+                    await client.DownloadAsync(uri, fs, fileName, progress, cancellationToken.Token, progressBox.EnablePause());
                 }
                 progressBox.Close();
                 Logger.WriteLine(string.Join(" ", MeInfo, $"HttpClient.DownloadAsync Complete."), LoggerType.Debug, param: ParamInfo);
@@ -498,6 +497,9 @@ namespace DivaModManager.Features.Download
                     progressBox.finished = true;
                     progressBox.Close();
                 }
+                // 不完全なファイルを残さない（キャンセル時と同様）
+                if (!string.IsNullOrEmpty(ret) && File.Exists(ret))
+                    FileHelper.DeleteFile(ret);
                 MessageBox.Show($"Error whilst downloading {fileName}. {e.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 cancelled = true;
             }
