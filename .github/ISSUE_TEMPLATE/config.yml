@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: DivaModLoader issues / Problemas de DivaModLoader
+    url: https://github.com/blueskythlikesclouds/DivaModLoader/issues
+    about: Problems loading mods in the game itself (not in the manager). / Problemas del cargador de mods dentro del juego (no del manager).

@@ -46,6 +46,9 @@ A community fork of [DivaModManager by Enomoto](https://github.com/enomoto-r02/D
 - The self-updater and GitHub button point to this repository.
 - Fixed the wrong title of the Settings BackUp dialog.
 
+### Report a bug
+- Open an [issue](https://github.com/Hans3010/DivaModManager-by-Hanserm/issues/new/choose) (English or Spanish).
+
 ### Support
 - If you want to support this fork: [Ko-fi](https://ko-fi.com/hanserm).
 - Please also consider supporting [Enomoto](https://github.com/sponsors/enomoto-r02), whose work this fork is built on.

@@ -1,0 +1,87 @@
+name: Bug report / Reportar un error
+description: Something in DivaModManager by Hanserm does not work. / Algo de DivaModManager by Hanserm no funciona.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please check that your report does **not** contain personal information (for example your Windows user name in file paths).
+        ¡Gracias por reportar! Revisa que el reporte **no** tenga datos personales (por ejemplo, tu usuario de Windows en las rutas de archivos).
+
+  - type: input
+    id: version
+    attributes:
+      label: DivaModManager version / Versión de DivaModManager
+      description: Shown in the window title. / Aparece en el título de la ventana.
+      placeholder: "1.4.0.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: started-after-update
+    attributes:
+      label: Did it start after updating DivaModManager? / ¿Empezó después de actualizar DivaModManager?
+      options:
+        - "No"
+        - "Yes / Sí"
+        - "I don't know / No sé"
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened? / ¿Qué pasó?
+      description: What did you do, step by step, and what did you expect? / Qué hiciste, paso a paso, y qué esperabas que pasara.
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-message
+    attributes:
+      label: Error message / Mensaje de error
+      description: Paste the complete message (do not shorten it) or attach a screenshot. / Pega el mensaje completo (sin acortarlo) o adjunta una captura.
+
+  - type: input
+    id: mod
+    attributes:
+      label: Mod involved (name and link) / Mod relacionado (nombre y link)
+      description: If the problem is with a specific mod. / Si el problema es con un mod en particular.
+
+  - type: dropdown
+    id: only-this-mod
+    attributes:
+      label: Does it also happen with only that mod enabled? / ¿Pasa también con solo ese mod activado?
+      options:
+        - "Not tested / No lo probé"
+        - "Yes / Sí"
+        - "No"
+
+  - type: input
+    id: dml-version
+    attributes:
+      label: DivaModLoader version / Versión de DivaModLoader
+      description: Shown in the log when DivaModManager starts. / Aparece en el registro al abrir DivaModManager.
+
+  - type: dropdown
+    id: drive
+    attributes:
+      label: Where are the game and DivaModManager installed? / ¿Dónde están instalados el juego y DivaModManager?
+      options:
+        - "Internal drive / Disco interno"
+        - "External drive / Disco externo"
+        - "One of each / Uno en cada uno"
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Log / Registro (optional / opcional)
+      description: |
+        Attach DivaModManager.log from the DivaModManager folder (it is overwritten each time DivaModManager starts, so copy it first). Check it for personal information before attaching.
+        Adjunta DivaModManager.log de la carpeta de DivaModManager (se reemplaza cada vez que lo abres, así que cópialo antes). Revisa que no tenga datos personales.
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy / Privacidad
+      options:
+        - label: I checked that this report does not contain personal information. / Revisé que este reporte no tenga datos personales.
+          required: true

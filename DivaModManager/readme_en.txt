@@ -1,6 +1,10 @@
 
 DivaModManager by Hanserm v1.4.0
 
+## Report a bug
+
+* GitHub Issues: https://github.com/Hans3010/DivaModManager-by-Hanserm/issues
+
 ## Credits
 
 * Based on DivaModManager by Enomoto (https://github.com/enomoto-r02/DivaModManager-by-Enomoto)
