@@ -69,6 +69,18 @@ namespace DivaModManager.Features.Module
         {
             bool ret = false;
             Clear();
+
+            // Mod の場合: 単体ファイルに加え、FARC（rom\mod_gm_module_tbl.farc など）内のテーブルも読み込む
+            // （以前は単体ファイルのみを探していたため、FARC で配布される一般的な Mod は表示されなかった）
+            if (!string.IsNullOrEmpty(targetModPath))
+            {
+                foreach (var table in Conflict.ModConflictScanner.ReadTables(targetModPath))
+                {
+                    LoadText(loadPriority, table.Text, targetModPath, table.Source);
+                }
+                return true;
+            }
+
             var basePath = "";          // "(mod name)"またはブランク("BASE"の場合)想定
             var modFolderPath = "";
             var appendFolderName = string.Empty;
@@ -127,12 +139,20 @@ namespace DivaModManager.Features.Module
         /// <returns></returns>
         private bool LoadDetail(int loadPriority, string pvDbPath, string modFolderPath, string relativePath)
         {
-            bool ret = false;
             if (!FileHelper.FileExists(pvDbPath))
             {
-                return ret;
+                return false;
             }
-            var pvDbAllLineList = FileHelper.TryReadAllText(pvDbPath).Replace("\r", "").Split("\n").ToList();
+            return LoadText(loadPriority, FileHelper.TryReadAllText(pvDbPath), modFolderPath, relativePath);
+        }
+
+        /// <summary>
+        /// モジュール・カスタマイズアイテムのテーブル（テキスト）を読み込む
+        /// </summary>
+        private bool LoadText(int loadPriority, string text, string modFolderPath, string relativePath)
+        {
+            bool ret = false;
+            var pvDbAllLineList = (text ?? string.Empty).Replace("\r", "").Split("\n").ToList();
             var lineCnt = 0;
             foreach (string line in pvDbAllLineList)
             {

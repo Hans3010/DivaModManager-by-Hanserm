@@ -26,6 +26,13 @@ A community fork of [DivaModManager by Enomoto](https://github.com/enomoto-r02/D
 - Read-only folders inside archives no longer block cleanup.
 - The 260-character path check now measures the final path in the game's `mods` folder instead of the temporary folder.
 
+**Conflicts between mods**
+- New **Conflicts** button: lists enabled mods that overwrite each other and which one is actually used:
+  same files (for example two song packs shipping `rom/2d/spr_sel_pvtmb.farc`, which leaves songs without thumbnails),
+  same song IDs (`pv_xxx`), same module IDs or costume slots, and same customize item IDs.
+- The button shows the number of conflicts and the log warns when new ones appear.
+- The **Module** tab now reads module tables inside `.farc` archives (how module mods are distributed) and no longer shows an "under development" popup.
+
 **Other**
 - The self-updater and GitHub button point to this repository.
 - Fixed the wrong title of the Settings BackUp dialog.

@@ -13,6 +13,8 @@ DivaModManager by Hanserm v1.3.1.35
 * Launch: warns if the game is already running instead of silently failing.
 * Launch: uses Steam to start the game when Steam is not running, avoiding the first launch closing itself.
 * Launch: warns when the mod configuration could not be saved.
+* New Conflicts button: shows enabled mods that overwrite each other's files, song IDs, module IDs or item IDs, and which one is used.
+* Module tab reads module tables inside .farc archives.
 * Implemented the Console option (it was disabled and unfinished): turns the DivaModLoader console window on or off.
 * Fixed read-only folders from archives blocking cleanup of temporary folders.
 * Downloads: interrupted or stalled downloads now retry automatically and resume where they stopped (no more stuck progress bars).

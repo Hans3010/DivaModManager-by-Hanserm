@@ -269,11 +269,6 @@ namespace DivaModManager.Features.Module
                     .ToList();
             }
             ModuleGrid.ItemsSource = viewModuleDataList;
-
-            if (viewInit)
-            {
-                var InstallMsg = App.Current.Dispatcher.BeginInvoke(() => WindowHelper.DMMWindowOpen(27));
-            }
         }
     }
 

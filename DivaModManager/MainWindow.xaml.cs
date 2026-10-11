@@ -2,6 +2,7 @@ using DivaModManager.Common.Config;
 using DivaModManager.Common.Helpers;
 using DivaModManager.Common.MessageWindow;
 using DivaModManager.Features.AltLink;
+using DivaModManager.Features.Conflict;
 using DivaModManager.Features.Debug;
 using DivaModManager.Features.DML;
 using DivaModManager.Features.DMM;
@@ -465,9 +466,60 @@ namespace DivaModManager
                 {
                     IsEnabledControls(true);
                 }
+                _ = UpdateConflictIndicatorAsync();
                 Logger.WriteLine(string.Join(" ", MeInfo, $"End."), LoggerType.Debug, param: ParamInfo);
             }
         }
+
+        #region Mod の競合チェック
+
+        private int lastConflictCount = -1;
+
+        /// <summary>
+        /// 有効な Mod を DML の読み込み優先度の順（config.toml の priority と同じ順）で返す
+        /// </summary>
+        private IReadOnlyList<(string Name, string Path)> GetEnabledModsInPriority()
+        {
+            var config = Global.ConfigJson?.CurrentConfig;
+            if (config?.Loadouts == null || config.CurrentLoadout == null || !config.Loadouts.ContainsKey(config.CurrentLoadout))
+                return new List<(string, string)>();
+            return config.Loadouts[config.CurrentLoadout]
+                .Where(x => x.enabled)
+                .Select(x => (x.name, x.directory_path))
+                .ToList();
+        }
+
+        private void ConflictsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new ConflictWindow(GetEnabledModsInPriority) { Owner = this };
+            window.ShowDialog();
+            _ = UpdateConflictIndicatorAsync();
+        }
+
+        /// <summary>
+        /// 競合の数をボタンに表示し、増えた場合はログで知らせる
+        /// </summary>
+        private async Task UpdateConflictIndicatorAsync()
+        {
+            try
+            {
+                var mods = GetEnabledModsInPriority();
+                var conflicts = await Task.Run(() => ModConflictScanner.Scan(mods));
+                ConflictsButton.Content = conflicts.Count > 0 ? $"Conflicts ({conflicts.Count})" : "Conflicts";
+                ConflictsButton.Foreground = new System.Windows.Media.SolidColorBrush(conflicts.Count > 0
+                    ? System.Windows.Media.Color.FromRgb(0xff, 0xb3, 0x47)
+                    : System.Windows.Media.Color.FromRgb(0xf2, 0xf2, 0xf2));
+                if (conflicts.Count > 0 && conflicts.Count != lastConflictCount)
+                    Logger.WriteLine($"{conflicts.Count} conflicts between enabled mods (mods overwriting each other's files, songs or modules). Click \"Conflicts\" for details.", LoggerType.Warning);
+                lastConflictCount = conflicts.Count;
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLine($"Conflict check failed: {ex.Message}", LoggerType.Debug);
+            }
+        }
+
+        #endregion
 
         #region RefreshAsync の分割メソッド群
 
