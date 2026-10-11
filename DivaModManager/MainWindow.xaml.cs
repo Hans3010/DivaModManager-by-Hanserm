@@ -1670,20 +1670,7 @@ namespace DivaModManager
                     {
                         string imagePath = previewFiles[previewFilesIndex]; // ファイルのフルパスを取得
 
-                        // --- MemoryStream を使わずに UriSource で直接読み込む ---
-                        var img = new BitmapImage();
-                        img.BeginInit();
-                        // UriSource にファイルパスを設定 (絶対パスを指定)
-                        var imageUri = new Uri(imagePath, UriKind.Absolute);
-                        img.UriSource = imageUri;
-                        // CacheOption は OnLoad のまま推奨 (読み込み完了後にファイルを解放するため)
-                        img.CacheOption = BitmapCacheOption.OnLoad;
-                        // DecodePixelWidth/Height を設定するとメモリ効率が良くなる場合がある (任意)
-                        // img.DecodePixelWidth = (int)Preview.ActualWidth; // または固定値
-                        img.EndInit();
-
-                        // Freeze すると別スレッドからのアクセスでも安全になる場合がある
-                        if (img.CanFreeze) img.Freeze();
+                        var img = LoadLocalPreviewImage(imagePath);
 
                         Dispatcher.InvokeAsync(async () =>
                         {
@@ -1795,11 +1782,7 @@ namespace DivaModManager
                     previewFilesIndex--;
                 }
 
-                var img = new BitmapImage();
-                img.BeginInit();
-                img.UriSource = new Uri(previewFiles[previewFilesIndex], UriKind.Absolute);
-                img.CacheOption = BitmapCacheOption.OnLoad;
-                img.EndInit();
+                var img = LoadLocalPreviewImage(previewFiles[previewFilesIndex]);
 
                 Dispatcher.InvokeAsync(async () =>
                 {
@@ -1840,6 +1823,24 @@ namespace DivaModManager
                 SetDefaultPreviewImage();
             }
         }
+        /// <summary>
+        /// Mod フォルダのプレビュー画像をメモリに読み込む。
+        /// 以前は UriSource でファイルを参照していたため、WpfAnimatedGif が再描画時にファイルを読み直し、
+        /// 表示中の Mod を削除すると「ファイルが見つからない」例外でアプリが落ちていた
+        /// </summary>
+        private static BitmapImage LoadLocalPreviewImage(string path)
+        {
+            // MemoryStream は破棄しない（GIF アニメーションの再デコードで使われるため）
+            var stream = new MemoryStream(File.ReadAllBytes(path));
+            var img = new BitmapImage();
+            img.BeginInit();
+            img.StreamSource = stream;
+            img.CacheOption = BitmapCacheOption.OnLoad;
+            img.EndInit();
+            if (img.CanFreeze) img.Freeze();
+            return img;
+        }
+
         private void ModPreviewRightButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -1863,11 +1864,7 @@ namespace DivaModManager
                     previewFilesIndex++;
                 }
 
-                var img = new BitmapImage();
-                img.BeginInit();
-                img.UriSource = new Uri(previewFiles[previewFilesIndex], UriKind.Absolute);
-                img.CacheOption = BitmapCacheOption.OnLoad;
-                img.EndInit();
+                var img = LoadLocalPreviewImage(previewFiles[previewFilesIndex]);
 
                 Dispatcher.InvokeAsync(async () =>
                 {
