@@ -4,6 +4,14 @@ A community fork of [DivaModManager by Enomoto](https://github.com/enomoto-r02/D
 
 *Fork comunitario de DivaModManager by Enomoto con correcciones de errores. Las descargas están en [Releases](https://github.com/Hans3010/DivaModManager-by-Hanserm/releases).*
 
+### Download
+
+Get the latest version from [Releases](https://github.com/Hans3010/DivaModManager-by-Hanserm/releases/latest):
+
+- **`…-Windows.zip`** (recommended): needs the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) (x64). Windows offers to install it the first time if it's missing.
+- **`…-Windows-Full.zip`**: .NET included, nothing to install (bigger download).
+- **`…-Linux.zip`** (experimental): for Linux and Steam Deck through Wine or Proton, .NET included.
+
 ### Changes in this fork
 
 **Launching the game**
