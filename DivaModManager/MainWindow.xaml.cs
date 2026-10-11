@@ -467,9 +467,60 @@ namespace DivaModManager
                     IsEnabledControls(true);
                 }
                 _ = UpdateConflictIndicatorAsync();
+                // Mod の追加・削除をブラウザのカード（インストール済みの印）に反映する
+                if (GBFeedBox.ItemsSource is System.Collections.IEnumerable gbItems) BrowserMarks.Mark(gbItems.Cast<object>());
+                if (DMAFeedBox.ItemsSource is System.Collections.IEnumerable dmaItems) BrowserMarks.Mark(dmaItems.Cast<object>());
                 Logger.WriteLine(string.Join(" ", MeInfo, $"End."), LoggerType.Debug, param: ParamInfo);
             }
         }
+
+        #region お気に入り・インストール済み表示（GameBanana / DivaModArchive タブ）
+
+        private void Favorite_Click(object sender, RoutedEventArgs e)
+        {
+            e.Handled = true;
+            if (sender is not FrameworkElement element) return;
+            BrowserMarks.ToggleFavorite(element.DataContext);
+            // お気に入りだけを表示中なら一覧を更新する
+            if (element.DataContext is GameBananaRecord && GBFavoritesCheckBox.IsChecked == true)
+                GBFeedBox.ItemsSource = BrowserMarks.GetFavoriteGameBanana();
+            else if (element.DataContext is DivaModArchivePost && DMAFavoritesCheckBox.IsChecked == true)
+                DMAFeedBox.ItemsSource = BrowserMarks.GetFavoriteDivaModArchive();
+        }
+
+        private void GBFavoritesCheckBox_Changed(object sender, RoutedEventArgs e)
+        {
+            if (!IsLoaded) return;
+            if (GBFavoritesCheckBox.IsChecked == true)
+            {
+                var favorites = BrowserMarks.GetFavoriteGameBanana();
+                if (favorites.Count == 0) Logger.WriteLine("No GameBanana favorites yet. Click the heart on a mod to add it.", LoggerType.Info);
+                GBFeedBox.ItemsSource = favorites;
+            }
+            else
+            {
+                BrowserMarks.Mark(FeedGenerator.CurrentFeed?.Records);
+                GBFeedBox.ItemsSource = FeedGenerator.CurrentFeed?.Records;
+            }
+        }
+
+        private void DMAFavoritesCheckBox_Changed(object sender, RoutedEventArgs e)
+        {
+            if (!IsLoaded) return;
+            if (DMAFavoritesCheckBox.IsChecked == true)
+            {
+                var favorites = BrowserMarks.GetFavoriteDivaModArchive();
+                if (favorites.Count == 0) Logger.WriteLine("No DivaModArchive favorites yet. Click the heart on a mod to add it.", LoggerType.Info);
+                DMAFeedBox.ItemsSource = favorites;
+            }
+            else
+            {
+                BrowserMarks.Mark(DMAFeedGenerator.CurrentFeed?.Posts);
+                DMAFeedBox.ItemsSource = DMAFeedGenerator.CurrentFeed?.Posts;
+            }
+        }
+
+        #endregion
 
         #region Mod の競合チェック
 
@@ -2544,6 +2595,8 @@ namespace DivaModManager
                     ShowBrowserError($"An unexpected error occurred while fetching the feed: {ex.Message}");
                     return;
                 }
+                BrowserMarks.Mark(FeedGenerator.CurrentFeed.Records);
+                GBFavoritesCheckBox.IsChecked = false;
                 GBFeedBox.ItemsSource = FeedGenerator.CurrentFeed.Records;
                 if (FeedGenerator.error)
                 {
@@ -2582,6 +2635,8 @@ namespace DivaModManager
                 GBPageBox.ItemsSource = Enumerable.Range(1, (int)FeedGenerator.CurrentFeed.TotalPages);
                 await Dispatcher.InvokeAsync(async () =>
                 {
+                    BrowserMarks.Mark(FeedGenerator.CurrentFeed?.Records);
+                    GBFavoritesCheckBox.IsChecked = false;
                     GBFeedBox.ItemsSource = FeedGenerator.CurrentFeed?.Records;
 
                     if (FeedGenerator.CurrentFeed?.Records != null && FeedGenerator.CurrentFeed.Records.Any())
@@ -2667,6 +2722,8 @@ namespace DivaModManager
                 }
                 await Dispatcher.InvokeAsync(async () =>
                 {
+                    BrowserMarks.Mark(DMAFeedGenerator.CurrentFeed.Posts);
+                    DMAFavoritesCheckBox.IsChecked = false;
                     DMAFeedBox.ItemsSource = DMAFeedGenerator.CurrentFeed.Posts;
                     if (DMAFeedGenerator.error)
                     {

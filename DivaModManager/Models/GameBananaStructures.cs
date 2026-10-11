@@ -184,8 +184,25 @@ namespace DivaModManager
         [JsonPropertyName("text")]
         public string Text { get; set; }
     }
-    public class GameBananaRecord : ExtractInfo
+    public class GameBananaRecord : ExtractInfo, System.ComponentModel.INotifyPropertyChanged
     {
+        // ブラウザ表示用: インストール済みか、お気に入りか（API のデータではない）
+        private bool _isInstalled;
+        [JsonIgnore]
+        public bool IsInstalled
+        {
+            get => _isInstalled;
+            set { if (_isInstalled == value) return; _isInstalled = value; PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(IsInstalled))); }
+        }
+        private bool _isFavorite;
+        [JsonIgnore]
+        public bool IsFavorite
+        {
+            get => _isFavorite;
+            set { if (_isFavorite == value) return; _isFavorite = value; PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(IsFavorite))); }
+        }
+        public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
+
         public GameBananaRecord()
         {
             base.Site = SITE.GAMEBANANA_BROWSER;
