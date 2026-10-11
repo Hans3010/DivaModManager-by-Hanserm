@@ -1,5 +1,5 @@
 
-DivaModManager by Hanserm v1.3.1.35
+DivaModManager by Hanserm v1.4.0
 
 ## Credits
 
