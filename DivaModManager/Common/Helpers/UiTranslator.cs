@@ -1,6 +1,8 @@
 using DivaModManager.Common.Config;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -10,7 +12,8 @@ namespace DivaModManager.Common.Helpers
 {
     /// <summary>
     /// 画面の固定テキスト（ボタン・タブ・チェックボックス・ツールチップなど）を英語から翻訳する。
-    /// 全要素の Loaded イベントで翻訳するので、ほかのウィンドウや DataTemplate 内の要素にも適用される。
+    /// 全要素の最初のレイアウト（SizeChanged）で翻訳するので、ほかのウィンドウや DataTemplate 内の要素にも適用される。
+    /// （Loaded のクラスハンドラーは、自分で Loaded ハンドラーを持つ要素にしか届かないので使わない）
     /// バインディングされた値（Mod 名など）や、コードが文字列で判定しているコントロールは翻訳しない。
     /// </summary>
     public static class UiTranslator
@@ -19,6 +22,12 @@ namespace DivaModManager.Common.Helpers
         private static readonly HashSet<string> ExcludedComboBoxes = new() { "VisibleColumnComboBox", "GBTypeBox" };
 
         private static Dictionary<string, string> current;
+
+        // 翻訳済みの要素（2回目以降の SizeChanged では何もしない）
+        private static readonly ConditionalWeakTable<FrameworkElement, object> translated = new();
+
+        private static readonly MethodInfo UpdateSelectionBoxItem =
+            typeof(ComboBox).GetMethod("UpdateSelectionBoxItem", BindingFlags.Instance | BindingFlags.NonPublic);
 
         public static bool IsActive => current != null;
 
@@ -29,7 +38,7 @@ namespace DivaModManager.Common.Helpers
             var pack = LanguagePacks.Get(Global.ConfigToml?.Language);
             if (pack == null || pack.Ui.Count == 0) return;
             current = pack.Ui;
-            EventManager.RegisterClassHandler(typeof(FrameworkElement), FrameworkElement.LoadedEvent, new RoutedEventHandler(OnLoaded), true);
+            EventManager.RegisterClassHandler(typeof(FrameworkElement), FrameworkElement.SizeChangedEvent, new SizeChangedEventHandler(OnSizeChanged), true);
         }
 
         /// <summary>コードから設定する文字列用。翻訳がなければそのまま返す</summary>
@@ -43,10 +52,11 @@ namespace DivaModManager.Common.Helpers
             return english;
         }
 
-        private static void OnLoaded(object sender, RoutedEventArgs e)
+        private static void OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
-            if (sender is FrameworkElement element)
+            if (sender is FrameworkElement element && !translated.TryGetValue(element, out _))
             {
+                translated.Add(element, null);
                 try { Translate(element); }
                 catch (Exception) { /* 翻訳の失敗で画面を壊さない */ }
             }
@@ -74,8 +84,11 @@ namespace DivaModManager.Common.Helpers
                 case HeaderedItemsControl headeredItems when headeredItems.Header is string itemsHeader && IsLiteral(headeredItems, HeaderedItemsControl.HeaderProperty):
                     headeredItems.Header = T(itemsHeader);
                     break;
+                case ComboBox comboBox:
+                    TranslateComboBox(comboBox);
+                    break;
                 case ComboBoxItem comboItem:
-                    TranslateComboBoxItem(comboItem);
+                    TranslateComboBoxItem(comboItem, ItemsControl.ItemsControlFromItemContainer(comboItem));
                     break;
                 case ContentControl content when content.Content is string text && IsLiteral(content, ContentControl.ContentProperty):
                     content.Content = T(text);
@@ -86,14 +99,31 @@ namespace DivaModManager.Common.Helpers
             }
         }
 
-        private static void TranslateComboBoxItem(ComboBoxItem item)
+        /// <summary>閉じたままのコンボボックスにも訳を出すため、XAML の項目を先に翻訳して表示中の項目を更新する</summary>
+        private static void TranslateComboBox(ComboBox comboBox)
+        {
+            if (ExcludedComboBoxes.Contains(comboBox.Name)) return;
+            var changed = false;
+            foreach (var item in comboBox.Items)
+            {
+                if (item is ComboBoxItem comboItem && comboItem.Content is string before)
+                {
+                    // Items にある ComboBoxItem は XAML（またはコード）で作られた項目そのもの
+                    TranslateComboBoxItem(comboItem, comboBox, declared: true);
+                    changed |= !ReferenceEquals(before, comboItem.Content);
+                }
+            }
+            if (changed && comboBox.SelectedItem != null) UpdateSelectionBoxItem?.Invoke(comboBox, null);
+        }
+
+        private static void TranslateComboBoxItem(ComboBoxItem item, ItemsControl owner, bool declared = false)
         {
             if (item.Content is not string text || !IsLiteral(item, ContentControl.ContentProperty)) return;
-            var owner = ItemsControl.ItemsControlFromItemContainer(item);
             if (owner == null || ExcludedComboBoxes.Contains(owner.Name)) return;
             // コードで生成された項目（データそのもの）は翻訳しない。XAML で書かれた項目だけ翻訳する
-            if (!ReferenceEquals(owner.ItemContainerGenerator.ItemFromContainer(item), item)) return;
-            item.Content = T(text);
+            if (!declared && !ReferenceEquals(owner.ItemContainerGenerator.ItemFromContainer(item), item)) return;
+            var t = T(text);
+            if (t != text) item.Content = t;
         }
 
         private static void TranslateTextBlock(TextBlock textBlock)

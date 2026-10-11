@@ -1,4 +1,4 @@
-using DivaModManager.Common.Config;
+﻿using DivaModManager.Common.Config;
 using DivaModManager.Common.Helpers;
 using DivaModManager.Common.MessageWindow;
 using DivaModManager.Features.AltLink;
@@ -1829,24 +1829,42 @@ namespace DivaModManager
                 SetDefaultPreviewImage();
             }
         }
-        /// <summary>
-        /// Mod フォルダのプレビュー画像をメモリに読み込む。
-        /// 以前は UriSource でファイルを参照していたため、WpfAnimatedGif が再描画時にファイルを読み直し、
-        /// 表示中の Mod を削除すると「ファイルが見つからない」例外でアプリが落ちていた
-        /// </summary>
-        private static BitmapImage LoadLocalPreviewImage(string path)
-        {
-            // MemoryStream は破棄しない（GIF アニメーションの再デコードで使われるため）
-            var stream = new MemoryStream(File.ReadAllBytes(path));
-            var img = new BitmapImage();
-            img.BeginInit();
-            img.StreamSource = stream;
-            img.CacheOption = BitmapCacheOption.OnLoad;
-            img.EndInit();
-            if (img.CanFreeze) img.Freeze();
-            return img;
-        }
-
+        /// <summary>
+
+        /// Mod フォルダのプレビュー画像をメモリに読み込む。
+
+        /// 以前は UriSource でファイルを参照していたため、WpfAnimatedGif が再描画時にファイルを読み直し、
+
+        /// 表示中の Mod を削除すると「ファイルが見つからない」例外でアプリが落ちていた
+
+        /// </summary>
+
+        private static BitmapImage LoadLocalPreviewImage(string path)
+
+        {
+
+            // MemoryStream は破棄しない（GIF アニメーションの再デコードで使われるため）
+
+            var stream = new MemoryStream(File.ReadAllBytes(path));
+
+            var img = new BitmapImage();
+
+            img.BeginInit();
+
+            img.StreamSource = stream;
+
+            img.CacheOption = BitmapCacheOption.OnLoad;
+
+            img.EndInit();
+
+            if (img.CanFreeze) img.Freeze();
+
+            return img;
+
+        }
+
+
+
         private void ModPreviewRightButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -3789,11 +3807,11 @@ namespace DivaModManager
             var combo = sender as ComboBox;
             if (combo != null && combo.IsKeyboardFocusWithin)
             {
-                var selectedValue = combo.SelectedItem.ToString().Split(": ")[1];
-                bool? setEnabled = selectedValue switch
+                // 項目の表示は翻訳されるので順番で判定する（Enabled / True / False）
+                bool? setEnabled = combo.SelectedIndex switch
                 {
-                    "True" => true,
-                    "False" => false,
+                    1 => true,
+                    2 => false,
                     _ => null,
                 };
                 ModGridSearch.isEnabledSearch = setEnabled;
@@ -3812,19 +3830,18 @@ namespace DivaModManager
             {
                 ModGridSearch.name = string.Empty;
                 ModGridSearch.note = string.Empty;
-                var selectedValue = combo.SelectedItem.ToString().Split(": ")[1];
-                ModGridSearch.name = selectedValue switch
+                // 項目の表示は翻訳されるので順番で判定する（Name & Note / Name / Note）
+                var selectedIndex = combo.SelectedIndex;
+                ModGridSearch.name = selectedIndex switch
                 {
                     // SearchModList側でnameとnoteが同じならOR検索にする
-                    "Name & Note" => SearchModListTextBox.Text,
-                    "Name" => SearchModListTextBox.Text,
+                    0 or 1 => SearchModListTextBox.Text,
                     _ => null,
                 };
-                ModGridSearch.note = selectedValue switch
+                ModGridSearch.note = selectedIndex switch
                 {
                     // SearchModList側でnameとnoteが同じならOR検索にする
-                    "Name & Note" => SearchModListTextBox.Text,
-                    "Note" => SearchModListTextBox.Text,
+                    0 or 2 => SearchModListTextBox.Text,
                     _ => null,
                 };
                 if (ModGridAddAfterAction != default)
