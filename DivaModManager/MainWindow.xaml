@@ -205,10 +205,22 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition/>
                         </Grid.ColumnDefinitions>
-                        <Image Name="CatIcon" Grid.Column="0" VerticalAlignment="Center" Source="{Binding Path=Category.Icon}" Margin="0,0,10,0" Stretch="Uniform" Height="35" Width="35"/>
-                        <TextBlock Name="CatText" FontFamily="{StaticResource DmmFont}" Grid.ColumnSpan="2" VerticalAlignment="Center" Foreground="#f2f2f2" Text="{Binding Path=CategoryName}" TextTrimming="WordEllipsis"/>
-                        <Image Grid.Column="0" VerticalAlignment="Center" Source="{Binding Path=Category.Icon, Converter={StaticResource ImageCache}, ConverterParameter=24}" Margin="0,0,10,0" Stretch="Uniform" Height="35" Width="35"/>
-                        <TextBlock FontFamily="{StaticResource DmmFont}" Grid.ColumnSpan="2" VerticalAlignment="Center" Foreground="#f2f2f2" Text="{Binding Path=CategoryName}" TextTrimming="WordEllipsis"/>
+                        <!-- 以前はアイコンと名前が2つずつあり、名前が2列にまたがってアイコンの下に重なっていた -->
+                        <Image Name="CatIcon" Grid.Column="0" VerticalAlignment="Center" Source="{Binding Path=Category.Icon, Converter={StaticResource ImageCache}, ConverterParameter=24}" Margin="0,0,10,0" Stretch="Uniform" Height="35" Width="35"/>
+                        <TextBlock Name="CatText" FontFamily="{StaticResource DmmFont}" VerticalAlignment="Center" Foreground="#f2f2f2" Text="{Binding Path=CategoryName}" TextTrimming="WordEllipsis">
+                            <TextBlock.Style>
+                                <Style TargetType="{x:Type TextBlock}">
+                                    <Setter Property="Grid.Column" Value="0"/>
+                                    <Setter Property="Grid.ColumnSpan" Value="2"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Path=Category.HasIcon}" Value="True">
+                                            <Setter Property="Grid.Column" Value="1"/>
+                                            <Setter Property="Grid.ColumnSpan" Value="1"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                         <Popup PlacementTarget="{Binding ElementName=CatGrid}" HorizontalAlignment="Center" AllowsTransparency="True">
                             <Popup.Style>
                                 <Style TargetType="Popup">
@@ -401,12 +413,22 @@
                         </Border>
                     </Popup>
                     <!-- Row 2: Author -->
-                    <StackPanel Grid.Row="2" Margin="10,-5,10,5" Orientation="Horizontal">
-                        <Image VerticalAlignment="Center" Source="{Binding Path=Authors[0].Avatar}" Margin="0,0,10,0" Height="35"/>
-                        <TextBlock VerticalAlignment="Center" FontFamily="{StaticResource DmmFont}" Foreground="#909090" Text="{Binding Path=Authors[0].Name}"/>
-                        <Image VerticalAlignment="Center" Source="{Binding Path=Authors[0].Avatar, Converter={StaticResource ImageCache}, ConverterParameter=24}" Margin="0,0,10,0" Height="35"/>
-                        <TextBlock VerticalAlignment="Center" FontFamily="{StaticResource DmmFont}" Foreground="#909090" Text="{Binding Path=Authors[0].Name}"/>
-                    </StackPanel>
+                    <!-- 以前は同じ作者のアバターと名前を2回表示していた。作者が複数いる場合は全員を表示する -->
+                    <ItemsControl Grid.Row="2" Margin="10,-5,10,5" ItemsSource="{Binding Path=Authors}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
+                                    <Image VerticalAlignment="Center" Source="{Binding Path=Avatar, Converter={StaticResource ImageCache}, ConverterParameter=24}" Margin="0,0,8,0" Height="35"/>
+                                    <TextBlock VerticalAlignment="Center" FontFamily="{StaticResource DmmFont}" Foreground="#909090" Text="{Binding Path=Name}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                     <!-- Row 3: Description -->
                     <TextBlock Name="Desc" FontFamily="{StaticResource DmmFont}" Margin="5,0,5,2" TextWrapping="Wrap" Grid.Row="3" Height="50" TextTrimming="WordEllipsis" Background="Transparent" VerticalAlignment="Center" Foreground="#f2f2f2" Text="{Binding Path=Text}"/>
                     <Popup MaxWidth="400" PlacementTarget="{Binding ElementName=Desc}" AllowsTransparency="True">
