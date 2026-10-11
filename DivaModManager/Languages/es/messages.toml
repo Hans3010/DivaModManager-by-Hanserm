@@ -301,25 +301,25 @@ info = "Ten cuidado con tus datos de guardado."
 context = "Este mod usa un guardado aparte cuando está activado, así que puede parecer que tu guardado se borró."
 window_title = "Advertencia"
 [WINDOW-0060]
-info = "Agregar loadout nuevo"
-context = "Crea un loadout nuevo con todos los mods en el mismo estado que el actual, en orden alfabético"
-window_title = "Editar loadouts"
+info = "Agregar perfil nuevo"
+context = "Crea un perfil nuevo con todos los mods en el mismo estado que el actual, en orden alfabético"
+window_title = "Editar perfiles"
 [WINDOW-0061]
-info = "Renombrar loadout actual"
-context = "Cambia el nombre del loadout actual"
+info = "Renombrar perfil actual"
+context = "Cambia el nombre del perfil actual"
 [WINDOW-0062]
-info = "Borrar loadout actual"
-context = "Borra el loadout actual y cambia al primero disponible"
+info = "Borrar perfil actual"
+context = "Borra el perfil actual y cambia al primero disponible"
 [WINDOW-0063]
-info = "Copiar loadout actual"
-context = "Copia el loadout actual"
+info = "Copiar perfil actual"
+context = "Copia el perfil actual"
 [WINDOW-0064]
 info = "Se borrarán los {0} mods seleccionados. ¿Estás seguro? \nNota: se borrarán directamente, no irán a la Papelera.\n\nNo se puede deshacer."
 window_title = "Información"
 [WINDOW-0065]
 info = "Sí."
 context = "No se puede deshacer."
-window_title = "¿Quieres borrar el loadout actual?: {0}"
+window_title = "¿Quieres borrar el perfil actual?: {0}"
 [WINDOW-0066]
 info = "Hay un proceso en segundo plano."
 context = "No se puede hacer esto hasta que termine el proceso actual."

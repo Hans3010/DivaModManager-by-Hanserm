@@ -3766,13 +3766,11 @@ namespace DivaModManager
             var combo = sender as ComboBox;
             if (combo != null && combo.IsKeyboardFocusWithin)
             {
-                ModGridSearch.isCategorySearch = combo.SelectedItem.ToString() switch
-                {
-                    "Category" => null,     // 条件なし
-                    _ => true,              // "Unspecified"の場合はstring.IsNullOrEmpty(x.category)で検索
-                };
+                // 先頭は条件なし、末尾は未指定（表示は翻訳されるので位置で判定する）
+                var index = combo.SelectedIndex;
+                ModGridSearch.isCategorySearch = index <= 0 ? null : true;
                 if (ModGridSearch.isCategorySearch != null)
-                    ModGridSearch.category = combo.SelectedItem.ToString() == "Unspecified" ? string.Empty : combo.SelectedItem.ToString();
+                    ModGridSearch.category = index == combo.Items.Count - 1 ? string.Empty : combo.SelectedItem.ToString();
                 if (ModGridAddAfterAction != default)
                     ModGridAddAfterAction = default;
                 ModGridAddAfterAction += () => SearchModListAsync();
@@ -3785,7 +3783,7 @@ namespace DivaModManager
             List<Mod> CategoryItems = Global.ModList_All.DistinctBy(x => x.category).OrderBy(x => x.category).ToList();
             Global.CategoryItems = new ObservableCollection<string>
             {
-                "Category"
+                UiTranslator.T("Category (All)")
             };
             foreach (var CategoryItem in CategoryItems)
             {
@@ -3794,7 +3792,7 @@ namespace DivaModManager
                     Global.CategoryItems.Add(CategoryItem.category);
                 }
             }
-            Global.CategoryItems.Add("Unspecified");
+            Global.CategoryItems.Add(UiTranslator.T("Unspecified"));
             SearchCategoryComboBox.ItemsSource = Global.CategoryItems;
             if (selected != null)
             {
@@ -3960,49 +3958,12 @@ namespace DivaModManager
             var combo = sender as ComboBox;
             if (combo != null && combo.IsKeyboardFocusWithin)
             {
-                var selectedValue = combo.SelectedItem.ToString().Split(": ")[1];
-                if (VisibleColumnComboBox.SelectedItem is ComboBoxItem item)
+                // 項目の表示は翻訳されるので Tag の列名で判定する（先頭の "Visible Column" は Tag なし）
+                if (VisibleColumnComboBox.SelectedItem is ComboBoxItem { Tag: string columnName })
                 {
-                    DataGridColumn col;
-                    switch (item.Content.ToString())
-                    {
-                        case "Visible Column":
-                            break;
-                        case "Enabled":
-                            col = GetDataGridColumnByName(ModGrid, "Enabled");
-                            col.Visibility = col.Visibility == Visibility.Visible ? Visibility.Hidden : col.Visibility = Visibility.Visible;
-                            break;
-                        case "Priority":
-                            col = GetDataGridColumnByName(ModGrid, "Priority");
-                            col.Visibility = col.Visibility == Visibility.Visible ? Visibility.Hidden : col.Visibility = Visibility.Visible;
-                            break;
-                        case "Name":
-                            col = GetDataGridColumnByName(ModGrid, "Name");
-                            col.Visibility = col.Visibility == Visibility.Visible ? Visibility.Hidden : col.Visibility = Visibility.Visible;
-                            break;
-                        case "Version":
-                            col = GetDataGridColumnByName(ModGrid, "Version");
-                            col.Visibility = col.Visibility == Visibility.Visible ? Visibility.Hidden : col.Visibility = Visibility.Visible;
-                            break;
-                        case "Site":
-                            col = GetDataGridColumnByName(ModGrid, "Site");
-                            col.Visibility = col.Visibility == Visibility.Visible ? Visibility.Hidden : col.Visibility = Visibility.Visible;
-                            break;
-                        case "Category":
-                            col = GetDataGridColumnByName(ModGrid, "Category");
-                            col.Visibility = col.Visibility == Visibility.Visible ? Visibility.Hidden : col.Visibility = Visibility.Visible;
-                            break;
-                        case "Size":
-                            col = GetDataGridColumnByName(ModGrid, "Size");
-                            col.Visibility = col.Visibility == Visibility.Visible ? Visibility.Hidden : col.Visibility = Visibility.Visible;
-                            break;
-                        case "Note":
-                            col = GetDataGridColumnByName(ModGrid, "Note");
-                            col.Visibility = col.Visibility == Visibility.Visible ? Visibility.Hidden : col.Visibility = Visibility.Visible;
-                            break;
-                        default:
-                            break;
-                    }
+                    var col = GetDataGridColumnByName(ModGrid, columnName);
+                    if (col != null)
+                        col.Visibility = col.Visibility == Visibility.Visible ? Visibility.Hidden : Visibility.Visible;
                 }
                 combo.SelectedIndex = 0;
             }

@@ -1,4 +1,4 @@
-<Window x:Class="DivaModManager.MainWindow"
+﻿<Window x:Class="DivaModManager.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -22,6 +22,7 @@
     <Window.Resources>
 
         <converters:ImageCacheConverter x:Key="ImageCache"/>
+        <converters:LoadoutNameConverter x:Key="LoadoutName"/>
         
         <!-- TabItem無効化時の色 -->
         <SolidColorBrush x:Key="TabItemDisabledBackground" Color="DarkGray"/>
@@ -822,7 +823,13 @@
                             </ComboBoxItem>
                         </ComboBox>
 
-                        <ComboBox Grid.Column="1" Margin="10,0,10,0" Height="35" FontSize="18" FontFamily="{StaticResource DmmFont}" Name="LoadoutBox" SelectionChanged="LoadoutBox_SelectionChanged" DropDownOpened="LoadoutBox_DropDownOpened" DropDownClosed="LoadoutBox_DropDownClosed"/>
+                        <ComboBox Grid.Column="1" Margin="10,0,10,0" Height="35" FontSize="18" FontFamily="{StaticResource DmmFont}" Name="LoadoutBox" SelectionChanged="LoadoutBox_SelectionChanged" DropDownOpened="LoadoutBox_DropDownOpened" DropDownClosed="LoadoutBox_DropDownClosed">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource LoadoutName}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                         <Button Name="EditLoadoutsButton" Foreground="#f2f2f2" FontSize="18" Content="Loadouts" Margin="0,0,10,0" Height="35" VerticalAlignment="Center" HorizontalAlignment="Stretch" Grid.Column="2" Background="#181818" BorderBrush="#252525" FontFamily="{StaticResource DmmFont}" Click="EditLoadoutsButton_Click"/>
                         <Button Name="SetupButton" Foreground="#f2f2f2" FontSize="18" Content="Setup" Margin="0,0,10,0" Height="35" VerticalAlignment="Center" HorizontalAlignment="Stretch" Grid.Column="3" Background="#181818" BorderBrush="#252525" FontFamily="{StaticResource DmmFont}" Click="SetupButton_Click"/>
                         <Button Name="LaunchButton" Foreground="#f2f2f2" FontSize="18" Content="Launch" Margin="0,0,10,0" Height="35" VerticalAlignment="Center" HorizontalAlignment="Stretch" Grid.Column="4" Background="#181818" BorderBrush="#252525" FontFamily="{StaticResource DmmFont}" Click="LaunchButton_Click"/>
@@ -881,12 +888,12 @@
                                 FontFamily="{StaticResource DmmFont}" FontWeight="Normal" IsEditable="False" Margin="0,8,10,8"
                                 SelectionChanged="VisibleColumnComboBox_SelectionChanged">
                             <ComboBoxItem Content="Visible Column" IsSelected="True"/>
-                            <ComboBoxItem Content="Priority"/>
-                            <ComboBoxItem Content="Version"/>
-                            <ComboBoxItem Content="Site"/>
-                            <ComboBoxItem Content="Category"/>
-                            <ComboBoxItem Content="Size"/>
-                            <ComboBoxItem Content="Note"/>
+                            <ComboBoxItem Content="Priority" Tag="Priority"/>
+                            <ComboBoxItem Content="Version" Tag="Version"/>
+                            <ComboBoxItem Content="Site" Tag="Site"/>
+                            <ComboBoxItem Content="Category" Tag="Category"/>
+                            <ComboBoxItem Content="Size" Tag="Size"/>
+                            <ComboBoxItem Content="Note" Tag="Note"/>
                         </ComboBox>
                         <Grid Grid.Column="7" Grid.Row="1" Margin="0,0,10,0">
                             <Grid.ColumnDefinitions>

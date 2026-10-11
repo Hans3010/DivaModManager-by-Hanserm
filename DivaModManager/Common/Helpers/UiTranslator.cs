@@ -19,7 +19,7 @@ namespace DivaModManager.Common.Helpers
     public static class UiTranslator
     {
         // コードが表示文字列で判定しているので翻訳しないコンボボックス
-        private static readonly HashSet<string> ExcludedComboBoxes = new() { "VisibleColumnComboBox", "GBTypeBox" };
+        private static readonly HashSet<string> ExcludedComboBoxes = new() { "GBTypeBox" };
 
         private static Dictionary<string, string> current;
 
