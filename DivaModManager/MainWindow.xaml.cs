@@ -66,7 +66,7 @@ namespace DivaModManager
         #endregion
 
         private FlowDocument defaultFlow = new();
-        private string defaultText = "Welcome to DivaModManager by Enomoto!\n\n" +
+        private string defaultText = "Welcome to DivaModManager by Hanserm!\n\n" +
             "To show metadata here:\nRight Click Row > Configure Mod and add author, version, and/or date fields" +
             "\nand/or Right Click Row > Fetch Metadata and confirm the GameBanana or DivaModArchive URL of the mod";
         ListSortDirection direction = ListSortDirection.Ascending;
@@ -152,7 +152,7 @@ namespace DivaModManager
                 Global.WindowLogger = new WindowLogger(ConsoleWindow);
 
                 Logger.WriteLine(string.Join(" ", $"{MeInfo}", "Start."), LoggerType.Debug, param: ParamInfo);
-                Logger.WriteLine($"DivaModManager by Enomoto v{App.Version}{App.TestVersion} Loading...", LoggerType.Info);
+                Logger.WriteLine($"DivaModManager by Hanserm v{App.Version}{App.TestVersion} Loading...", LoggerType.Info);
 
                 IsEnabledControls(false);
 
@@ -268,7 +268,7 @@ namespace DivaModManager
 
                 defaultFlow.Blocks.Add(ConvertToFlowParagraph(defaultText));
                 DescriptionWindow.Document = defaultFlow;
-                var bitmap = new BitmapImage(new Uri("pack://application:,,,/DivaModManager;component/Assets/preview_enomoto.png"));
+                var bitmap = new BitmapImage(new Uri("pack://application:,,,/DivaModManager;component/Assets/preview_hanserm.png"));
                 ImageBehavior.SetAnimatedSource(Preview, bitmap);
                 ImageBehavior.SetAnimatedSource(PreviewBG, null);
 
@@ -320,7 +320,7 @@ namespace DivaModManager
             await App.Current.Dispatcher.InvokeAsync(() => OnFirstOpenAsync());
             if (!Global.IsWine && Global.ConfigToml.DivaModManagerUpdateCheck)
             {
-                Logger.WriteLine("Checking for DivaModManager by Enomoto update...", LoggerType.Info);
+                Logger.WriteLine("Checking for DivaModManager by Hanserm update...", LoggerType.Info);
                 if (await DMMUpdater.CheckForDMMUpdate(new CancellationTokenSource()))
                     Close();
             }
@@ -344,7 +344,7 @@ namespace DivaModManager
                 await RefreshAsync();
             });
 
-            Logger.WriteLine($"DivaModManager by Enomoto v{App.Version}{App.TestVersion} Loaded!", LoggerType.Info);
+            Logger.WriteLine($"DivaModManager by Hanserm v{App.Version}{App.TestVersion} Loaded!", LoggerType.Info);
 
             // セットアップが完了していない場合は次のステップを表示
             if (string.IsNullOrEmpty(Global.ConfigJson.Configs[Global.ConfigJson.CurrentGame].Launcher))
@@ -653,7 +653,7 @@ namespace DivaModManager
             {
                 infos.Add($"DivaModLoader(nothing)");
             }
-            infos.Add($"DivaModManager by Enomoto v{App.Version}{App.TestVersion}");
+            infos.Add($"DivaModManager by Hanserm v{App.Version}{App.TestVersion}");
 
             if (Global.ConfigJson.CurrentConfig.FirstOpen && totalCount > 0)
             {
@@ -852,19 +852,34 @@ namespace DivaModManager
                 var path = Global.ConfigJson.Configs[Global.ConfigJson.CurrentGame].Launcher;
                 try
                 {
-                    if (Global.ConfigJson.Configs[Global.ConfigJson.CurrentGame].LauncherOptionIndex > 0)
+                    // 前回のゲームプロセスが残っているとSteamが新しい起動を無視するため、
+                    // 何度も起動し直さないとゲームが開かない原因になる
+                    if (IsProcessRunning(Path.GetFileNameWithoutExtension(path)))
                     {
-                        var id = "";
-                        switch ((GameFilter)GameBox.SelectedIndex)
-                        {
-                            case GameFilter.MMP:
-                                id = "1761390";
-                                break;
-                        }
+                        Logger.WriteLine($"{Path.GetFileName(path)} is already running. Close it (check Task Manager) before launching again.", LoggerType.Warning);
+                        return;
+                    }
+
+                    var id = "";
+                    switch ((GameFilter)GameBox.SelectedIndex)
+                    {
+                        case GameFilter.MMP:
+                            id = "1761390";
+                            break;
+                    }
+                    // Steam未起動でexeを直接起動すると、steam_apiがゲームを終了させてSteam経由で再起動するため
+                    // 一度目の起動が失敗したように見える。その場合はSteam経由で起動する
+                    var useSteam = Global.ConfigJson.Configs[Global.ConfigJson.CurrentGame].LauncherOptionIndex > 0
+                        || (!Global.IsWine && !string.IsNullOrEmpty(id) && !IsProcessRunning("steam"));
+                    if (useSteam && !string.IsNullOrEmpty(id))
+                    {
                         path = $"steam://rungameid/{id}";
                     }
 
-                    await Global.ConfigUpdatesAsync();
+                    if (!await Global.ConfigUpdatesAsync())
+                    {
+                        Logger.WriteLine($"Couldn't save the mod configuration. Enabled mods may not be applied in game.", LoggerType.Warning);
+                    }
 
                     Logger.WriteLine($"Launching {path}", LoggerType.Info);
                     var ps = new ProcessStartInfo(path)
@@ -886,9 +901,16 @@ namespace DivaModManager
             }
         }
 
+        private static bool IsProcessRunning(string processName)
+        {
+            var processes = Process.GetProcessesByName(processName);
+            foreach (var p in processes) p.Dispose();
+            return processes.Length > 0;
+        }
+
         private void GitHubButton_Click(object sender, RoutedEventArgs e)
         {
-            ProcessHelper.TryStartProcess($"https://github.com/enomoto-r02/DivaModManager-by-Enomoto/releases");
+            ProcessHelper.TryStartProcess(DMMUpdater.RELEASES_URL);
         }
 
         private void GitHubSponsorsButton_Click(object sender, RoutedEventArgs e)
@@ -1244,12 +1266,31 @@ namespace DivaModManager
         }
 
 
+        // config.toml から表示を同期している間は書き込みを行わない
+        private bool isSyncingDMLConsoleBox = false;
+
+        /// <summary>
+        /// DMLの config.toml の console 設定をコンボボックスに反映する
+        /// </summary>
+        private void SyncDMLConsoleBox()
+        {
+            var enabled = ModLoader.ReadConsoleEnabled();
+            isSyncingDMLConsoleBox = true;
+            DMLConsoleBox.SelectedIndex = enabled == true ? 1 : 0;
+            isSyncingDMLConsoleBox = false;
+        }
+
+        // 以前は未実装（常に無効化され、選択時はデバッグ用のメッセージを表示するだけ）だった
         private void DMLConsoleBox_SelectionChanged(object sender, RoutedEventArgs e)
         {
-            if (IsLoaded)
-            {
-                MessageBox.Show(Global.ConfigJson.Configs[Global.ConfigJson.CurrentGame].DMLConfig);
-            }
+            if (!IsLoaded || isSyncingDMLConsoleBox || DMLConsoleBox.SelectedIndex < 0)
+                return;
+
+            var enabled = DMLConsoleBox.SelectedIndex == 1;
+            if (ModLoader.WriteConsoleEnabled(enabled))
+                Logger.WriteLine($"DivaModLoader console {(enabled ? "enabled" : "disabled")}. It will take effect the next time the game starts.", LoggerType.Info);
+            else
+                SyncDMLConsoleBox();
         }
         private void CoreUpdateButton_Click(object sender, RoutedEventArgs e)
         {
@@ -1271,7 +1312,7 @@ namespace DivaModManager
                 //await ModUpdater.CheckForUpdates(Global.config.Configs[Global.config.CurrentGame].ModsFolder, this, false);
 
                 // Update Checkボタンなら設定ファイルを参照しない
-                Logger.WriteLine("Checking for DivaModManager by Enomoto update...", LoggerType.Info);
+                Logger.WriteLine("Checking for DivaModManager by Hanserm update...", LoggerType.Info);
                 if (await DMMUpdater.CheckForDMMUpdate(new CancellationTokenSource()))
                     Close();    // DMMeDownloadで展開、手動更新のためCloseしない
                 Logger.WriteLine($"Checking for DivaModLoader update...", LoggerType.Info);
@@ -1722,7 +1763,7 @@ namespace DivaModManager
         {
             try
             {
-                var bitmap = new BitmapImage(new Uri("pack://application:,,,/DivaModManager;component/Assets/preview_enomoto.png"));
+                var bitmap = new BitmapImage(new Uri("pack://application:,,,/DivaModManager;component/Assets/preview_hanserm.png"));
                 // if (bitmap.CanFreeze) bitmap.Freeze();
                 ImageBehavior.SetAnimatedSource(Preview, bitmap);
                 ImageBehavior.SetAnimatedSource(PreviewBG, null); // BG はクリア
@@ -2459,7 +2500,7 @@ namespace DivaModManager
                     GBBrowserRefreshButton.Visibility = Visibility.Visible;
                     if (FeedGenerator.exception.Message.Contains("JSON tokens"))
                     {
-                        GBBrowserMessage.Text = "Uh oh! DivaModManager by Enomoto failed to deserialize the GameBanana feed.";
+                        GBBrowserMessage.Text = "Uh oh! DivaModManager by Hanserm failed to deserialize the GameBanana feed.";
                         return;
                     }
                     GBBrowserMessage.Text = Regex.Match(FeedGenerator.exception.Message, @"\d+").Value switch
@@ -2484,7 +2525,7 @@ namespace DivaModManager
                     GBErrorPanel.Visibility = Visibility.Visible;
                     GBBrowserRefreshButton.Visibility = Visibility.Collapsed;
                     GBBrowserMessage.Visibility = Visibility.Visible;
-                    GBBrowserMessage.Text = "DivaModManager by Enomoto couldn't find any mods.";
+                    GBBrowserMessage.Text = "DivaModManager by Hanserm couldn't find any mods.";
                 }
                 GBPageBox.ItemsSource = Enumerable.Range(1, (int)FeedGenerator.CurrentFeed.TotalPages);
                 await Dispatcher.InvokeAsync(async () =>
@@ -2507,7 +2548,7 @@ namespace DivaModManager
                     else
                     {
                         GBFeedBox.Visibility = Visibility.Collapsed;
-                        ShowBrowserError("DivaModManager by Enomoto couldn't find any mods matching the criteria.");
+                        ShowBrowserError("DivaModManager by Hanserm couldn't find any mods matching the criteria.");
                         GBPageRight.IsEnabled = false;
                         GBPageLeft.IsEnabled = false;
                         GBPageBox.ItemsSource = null;
@@ -2582,7 +2623,7 @@ namespace DivaModManager
                         DMABrowserRefreshButton.Visibility = Visibility.Visible;
                         if (DMAFeedGenerator.exception.Message.Contains("JSON tokens"))
                         {
-                            DMABrowserMessage.Text = "Uh oh! DivaModManager by Enomoto failed to deserialize the DivaModArchive feed.";
+                            DMABrowserMessage.Text = "Uh oh! DivaModManager by Hanserm failed to deserialize the DivaModArchive feed.";
                             return;
                         }
                         DMABrowserMessage.Text = Regex.Match(DMAFeedGenerator.exception.Message, @"\d+").Value switch
@@ -2607,7 +2648,7 @@ namespace DivaModManager
                         DMAErrorPanel.Visibility = Visibility.Visible;
                         DMABrowserRefreshButton.Visibility = Visibility.Collapsed;
                         DMABrowserMessage.Visibility = Visibility.Visible;
-                        DMABrowserMessage.Text = "DivaModManager by Enomoto couldn't find any mods.";
+                        DMABrowserMessage.Text = "DivaModManager by Hanserm couldn't find any mods.";
                     }
                     DMAPageBox.ItemsSource = Enumerable.Range(1, (int)DMAFeedGenerator.CurrentFeed.TotalPages);
                     DMAPageBox.SelectedValue = DMApage;
@@ -3866,8 +3907,9 @@ namespace DivaModManager
             EditLoadoutsButton.IsEnabled = isDMLInstalled;
             SetupButton.IsEnabled = setEnabledFirst && !isWine;
             LaunchButton.IsEnabled = isMMPInstalled;
-            //DMLConsoleBox.IsEnabled = isDMLInstalled;
-            DMLConsoleBox.IsEnabled = false;
+            DMLConsoleBox.IsEnabled = isDMLInstalled;
+            if (isDMLInstalled)
+                SyncDMLConsoleBox();
             CoreUpdateButton.IsEnabled = setEnabledFirst && !isWine;
             LoadoutBox.IsEnabled = isDMLInstalled;
 

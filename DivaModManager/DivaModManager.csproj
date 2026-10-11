@@ -46,6 +46,7 @@
     <None Remove="Assets\noimage.png" />
     <None Remove="Assets\preview.png" />
     <None Remove="Assets\preview_enomoto.png" />
+    <None Remove="Assets\preview_hanserm.png" />
     <None Remove="Assets\github-mark-white.png" />
     <None Remove="Downloads\Do not place files under this folder" />
     <None Remove="GameBanana.png" />
@@ -127,6 +128,7 @@
     </Resource>
     <Resource Include="Assets\preview.png" />
     <Resource Include="Assets\preview_enomoto.png" />
+    <Resource Include="Assets\preview_hanserm.png" />
     <Resource Include="Assets\github-mark-white.png" />
     <Resource Include="Assets\gift-solid.png" />
     <Resource Include="Common\Style\Button.xaml" />

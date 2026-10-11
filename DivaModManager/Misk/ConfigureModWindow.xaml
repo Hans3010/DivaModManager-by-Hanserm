@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DivaModManager.Misk"
         mc:Ignorable="d"
-        Title="DivaModManager by Enomoto" WindowStartupLocation="CenterScreen"
+        Title="DivaModManager by Hanserm" WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize" MinWidth="400" MaxWidth="550"
         Background="#202020" ShowActivated="True" SizeToContent="WidthAndHeight">
     <Window.Resources>

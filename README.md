@@ -1,4 +1,44 @@
-# DivaModManager-by-Enomoto  
+# DivaModManager by Hanserm
+
+A community fork of [DivaModManager by Enomoto](https://github.com/enomoto-r02/DivaModManager-by-Enomoto), which is itself based on [Tekka's Diva Mod Manager](https://github.com/TekkaGB/DivaModManager), for *Hatsune Miku: Project DIVA Mega Mix+*.
+
+*Fork comunitario de DivaModManager by Enomoto con correcciones de errores. Las descargas están en [Releases](https://github.com/Hans3010/DivaModManager-by-Hanserm/releases).*
+
+### Changes in this fork
+
+**Launching the game**
+- Fixed `config.toml` retry logic: a brief file lock could leave the enabled mod list unsaved, so mods were not applied in game.
+- Launch warns if the game is already running instead of silently failing.
+- Launch goes through Steam when Steam is not running, so the first launch no longer closes itself.
+- Launch warns when the mod configuration could not be saved.
+- Implemented the **Console** option (it was disabled and unfinished): turns the DivaModLoader console on or off.
+
+**Downloads**
+- Interrupted or stalled downloads retry automatically and resume where they stopped.
+- Server errors and incomplete files are reported instead of being installed as a broken mod.
+- Added Pause/Resume, download speed and time remaining.
+- Fixed the update dialog showing the wrong file size.
+
+**Extraction**
+- Fixed a deadlock where large archives froze the manager forever (7-Zip output was never read).
+- Added an extraction progress window; closing it cancels the extraction. The main window no longer freezes.
+- Temporary extraction folders (`Downloads\temp_*`) are now deleted; previously they were never removed and could waste many GB.
+- Read-only folders inside archives no longer block cleanup.
+- The 260-character path check now measures the final path in the game's `mods` folder instead of the temporary folder.
+
+**Other**
+- The self-updater and GitHub button point to this repository.
+- Fixed the wrong title of the Settings BackUp dialog.
+
+### Credits
+- [Tekka](https://github.com/TekkaGB/DivaModManager) — original Diva Mod Manager.
+- [Enomoto](https://github.com/enomoto-r02/DivaModManager-by-Enomoto) — DivaModManager by Enomoto, on which this fork is based.
+- Licensed under the GNU GPL v3 (see `LICENSE`).
+
+---
+
+## Original README (DivaModManager by Enomoto)
+### DivaModManager-by-Enomoto  
 ### Overview  
 This tool is based on [Tekka's Diva Mod Manager](https://github.com/TekkaGB/DivaModManager) v1.3.1, with bug fixes and minor feature additions made by Enomoto.
 Please note that this is not an official successor to DMM.

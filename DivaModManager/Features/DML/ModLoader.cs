@@ -16,9 +16,59 @@ namespace DivaModManager.Features.DML
     public static class ModLoader
     {
         public static readonly string CONFIG_TOML_NAME = "config.toml";
+        private const int MAX_RETRY = 5;
+        private const int RETRY_DELAY_MS = 500;
         public static string CONFIG_TOML_PATH
         {
             get { return Path.Combine(Path.GetDirectoryName(Global.ConfigJson.Configs[Global.ConfigJson.CurrentGame].ModsFolder), "config.toml"); }
+        }
+
+        /// <summary>
+        /// config.toml の console 設定を取得する（読み込めない場合は null）
+        /// </summary>
+        public static bool? ReadConsoleEnabled()
+        {
+            try
+            {
+                if (!File.Exists(CONFIG_TOML_PATH))
+                    return null;
+                if (!Toml.TryToModel(File.ReadAllText(CONFIG_TOML_PATH), out TomlTable config, out _))
+                    return null;
+                return config.TryGetValue("console", out var value) && value is bool b && b;
+            }
+            catch (Exception e)
+            {
+                Logger.WriteLine($"Couldn't read console setting from {CONFIG_TOML_PATH} ({e.Message})", LoggerType.Warning);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// config.toml の console 設定を変更する（他の設定は保持する）
+        /// </summary>
+        public static bool WriteConsoleEnabled(bool enabled)
+        {
+            try
+            {
+                if (!File.Exists(CONFIG_TOML_PATH))
+                {
+                    Logger.WriteLine($"Unable to find {CONFIG_TOML_PATH}", LoggerType.Error);
+                    return false;
+                }
+                if (!Toml.TryToModel(File.ReadAllText(CONFIG_TOML_PATH), out TomlTable config, out _))
+                {
+                    Logger.WriteLine($"Couldn't parse {CONFIG_TOML_PATH}", LoggerType.Error);
+                    return false;
+                }
+                config["console"] = enabled;
+                File.WriteAllText(CONFIG_TOML_PATH, Toml.FromModel(config));
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.WriteLine($"Couldn't write console setting to {CONFIG_TOML_PATH} ({e.Message})", LoggerType.Error);
+                return false;
+            }
         }
 
         /// <summary>
@@ -38,32 +88,29 @@ namespace DivaModManager.Features.DML
                 Logger.WriteLine($"BuildAsync Unable to find {CONFIG_TOML_PATH} id:{Environment.CurrentManagedThreadId}", LoggerType.Debug);
                 return false;
             }
-            var configString = string.Empty;
-            var retryCnt = 0;
-            var retryCntOver = false;
-            while (string.IsNullOrEmpty(configString) || !retryCntOver)
+            // 以前の実装はリトライ判定が逆転しており、一時的なロック後に読み込みが成功しても
+            // false を返して config.toml が更新されない（Modが反映されない）ことがあった
+            string configString = null;
+            for (var retryCnt = 0; retryCnt < MAX_RETRY; retryCnt++)
             {
                 try
                 {
                     configString = File.ReadAllText(CONFIG_TOML_PATH);
                     break;
                 }
+                catch (IOException)
+                {
+                    await Task.Delay(RETRY_DELAY_MS);
+                }
                 catch (Exception e)
                 {
-                    // Check if the exception is related to an IO error.
-                    if (e.GetType() != typeof(IOException))
-                    {
-                        Logger.WriteLine($"Couldn't access {CONFIG_TOML_PATH} ({e.Message})", LoggerType.Error);
-                        break;
-                    }
-                    await Task.Delay(500);
-                    retryCnt++;
-                    retryCntOver = 5 >= retryCnt;
+                    Logger.WriteLine($"Couldn't access {CONFIG_TOML_PATH} ({e.Message})", LoggerType.Error);
+                    return false;
                 }
             }
-            if (retryCntOver)
+            if (configString == null)
             {
-                var paramStr = $"caller:{caller} retryCntOver:{retryCntOver} id:{Environment.CurrentManagedThreadId}";
+                var paramStr = $"caller:{caller} retry:{MAX_RETRY} id:{Environment.CurrentManagedThreadId}";
                 Logger.WriteLine($"Couldn't read {CONFIG_TOML_PATH}", LoggerType.Error, param: paramStr);
                 return false;
             }
@@ -87,29 +134,31 @@ namespace DivaModManager.Features.DML
             foreach (var mod in Global.ConfigJson.Configs[Global.ConfigJson.CurrentGame].Loadouts[Global.ConfigJson.Configs[Global.ConfigJson.CurrentGame].CurrentLoadout].Where(x => x.enabled).ToList())
                 priorityList.Add(mod.name);
             config["priority"] = priorityList.ToArray();
+            // 以前の実装は書き込み成功後も毎回500ms待機し、IOExceptionが続くと無限ループになっていた
+            // （一時ファイル＋Moveは MMPWatcherTOML の Renamed を発火させるため使用しない）
             var isReady = false;
-            retryCnt = 0;
-            retryCntOver = false;
-            while (!isReady || !retryCntOver)
+            var tomlText = Toml.FromModel(config);
+            for (var retryCnt = 0; retryCnt < MAX_RETRY && !isReady; retryCnt++)
             {
                 try
                 {
-                    File.WriteAllText(CONFIG_TOML_PATH, Toml.FromModel(config));
+                    File.WriteAllText(CONFIG_TOML_PATH, tomlText);
                     isReady = true;
+                }
+                catch (IOException)
+                {
+                    await Task.Delay(RETRY_DELAY_MS);
                 }
                 catch (Exception e)
                 {
-                    // Check if the exception is related to an IO error.
-                    if (e.GetType() != typeof(IOException))
-                    {
-                        var paramStr = $"caller:{caller} retryCntOver:{retryCntOver} id:{Environment.CurrentManagedThreadId}";
-                        Logger.WriteLine($"Couldn't access {CONFIG_TOML_PATH} ({e.Message})", LoggerType.Error, param: paramStr);
-                        break;
-                    }
+                    var paramStr = $"caller:{caller} retry:{retryCnt} id:{Environment.CurrentManagedThreadId}";
+                    Logger.WriteLine($"Couldn't access {CONFIG_TOML_PATH} ({e.Message})", LoggerType.Error, param: paramStr);
+                    break;
                 }
-                await Task.Delay(500);
-                retryCnt++;
-                retryCntOver = 5 >= retryCnt;
+            }
+            if (!isReady)
+            {
+                Logger.WriteLine($"Couldn't write {CONFIG_TOML_PATH}. Mod changes may not be applied.", LoggerType.Error);
             }
 
             Logger.WriteLine(string.Join(" ", MeInfo, $"End.", $"Result:{isReady}"), LoggerType.Debug, param: ParamInfo);

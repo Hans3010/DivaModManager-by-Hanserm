@@ -23,7 +23,11 @@ namespace DivaModManager.Features.DMM
 {
     public class DMMUpdater
     {
-        private static readonly string MODULE_NAME = "DivaModManager by Enomoto";
+        private static readonly string MODULE_NAME = "DivaModManager by Hanserm";
+        // 更新確認・ダウンロードに使う GitHub リポジトリ（フォーク元の enomoto-r02/DivaModManager-by-Enomoto ではない）
+        public static readonly string REPO_OWNER = "Hans3010";
+        public static readonly string REPO_NAME = "DivaModManager-by-Hanserm";
+        public static readonly string RELEASES_URL = $"https://github.com/{REPO_OWNER}/{REPO_NAME}/releases";
 
         private static ProgressBox progressBox;
         private static GitHubClient client;
@@ -33,7 +37,7 @@ namespace DivaModManager.Features.DMM
         private static void InitSetup()
         {
             if (IsInitSetup) { return; }
-            client = new GitHubClient(new ProductHeaderValue("DivaModManager-by-Enomoto"));
+            client = new GitHubClient(new ProductHeaderValue(REPO_NAME));
             IsInitSetup = true;
         }
 
@@ -47,10 +51,10 @@ namespace DivaModManager.Features.DMM
             var localVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
             InitSetup();
-            var owner = "enomoto-r02";
-            var repo = "DivaModManager-by-Enomoto";
+            var owner = REPO_OWNER;
+            var repo = REPO_NAME;
             var timeout = TimeSpan.FromSeconds(Global.ConfigToml.GitHubApiTimeoutSec);
-            Logger.WriteLine($"Download DivaModManager by Enomoto from Github. (This timeout is {timeout} seconds.)", LoggerType.Debug);
+            Logger.WriteLine($"Download DivaModManager by Hanserm from Github. (This timeout is {timeout} seconds.)", LoggerType.Debug);
 
             Release release = new();
             try
@@ -65,7 +69,7 @@ namespace DivaModManager.Features.DMM
                 }
                 if (UpdateAvailable(onlineVersion, localVersion))
                 {
-                    UpdateChangelogBox notification = new(release, "DivaModManager by Enomoto", $"A new version of DivaModManager by Enomoto is available (v{onlineVersion})!", null, false);
+                    UpdateChangelogBox notification = new(release, "DivaModManager by Hanserm", $"A new version of DivaModManager by Hanserm is available (v{onlineVersion})!", null, false);
                     notification.ShowDialog();
                     notification.Activate();
                     if (notification.YesNo)
@@ -104,7 +108,7 @@ namespace DivaModManager.Features.DMM
                             var AutomaticFailedMsg = App.Current.Dispatcher.Invoke(() => WindowHelper.DMMWindowOpen(89));
                             if (AutomaticFailedMsg == WindowHelper.WindowCloseStatus.Yes)
                             {
-                                ProcessHelper.TryStartProcess("https://github.com/enomoto-r02/DivaModManager-by-Enomoto/releases");
+                                ProcessHelper.TryStartProcess(RELEASES_URL);
                             }
                             return false;
                         }
@@ -123,13 +127,19 @@ namespace DivaModManager.Features.DMM
                     }
                     else
                     {
-                        Logger.WriteLine($"Update for DivaModManager by Enomoto {onlineVersion} cancelled.", LoggerType.Info);
+                        Logger.WriteLine($"Update for DivaModManager by Hanserm {onlineVersion} cancelled.", LoggerType.Info);
                     }
                 }
                 else
                 { 
-                    Logger.WriteLine($"No update for DivaModManager by Enomoto {onlineVersion} available.", LoggerType.Info);
+                    Logger.WriteLine($"No update for DivaModManager by Hanserm {onlineVersion} available.", LoggerType.Info);
                 }
+            }
+            catch (NotFoundException)
+            {
+                // リリースがまだ公開されていない場合
+                Logger.WriteLine($"No releases of {MODULE_NAME} have been published yet.", LoggerType.Info);
+                return false;
             }
             catch (AggregateException)
             {
@@ -137,7 +147,7 @@ namespace DivaModManager.Features.DMM
                 var resultWindow = WindowHelper.DMMWindowOpenAsync(25, replaceList);
                 if (resultWindow.Result == WindowHelper.WindowCloseStatus.Yes)
                 {
-                    ProcessHelper.TryStartProcess("https://github.com/enomoto-r02/DivaModManager-by-Enomoto/releases");
+                    ProcessHelper.TryStartProcess(RELEASES_URL);
                 }
                 return false;
             }
@@ -164,7 +174,7 @@ namespace DivaModManager.Features.DMM
                 progressBox = new ProgressBox(cancellationToken);
                 progressBox.progressBar.Value = 0;
                 progressBox.progressText.Text = $"Downloading {fileName}";
-                progressBox.Title = "DivaModManager by Enomoto Update Progress";
+                progressBox.Title = "DivaModManager by Hanserm Update Progress";
                 progressBox.finished = false;
                 progressBox.Show();
                 progressBox.Activate();
@@ -174,7 +184,7 @@ namespace DivaModManager.Features.DMM
                 using (var fs = new FileStream(
                     downloadFilePath, System.IO.FileMode.Create, FileAccess.Write, FileShare.None))
                 {
-                    await Global.GitHubclient.DownloadAsync(uri, fs, fileName, progress, cancellationToken.Token);
+                    await Global.GitHubclient.DownloadAsync(uri, fs, fileName, progress, cancellationToken.Token, progressBox.EnablePause());
                 }
                 // Rename the file
                 if (!File.Exists(moveFilePath))
@@ -214,8 +224,7 @@ namespace DivaModManager.Features.DMM
             progressBox.progressBar.Value = progress.Percentage * 100;
             progressBox.taskBarItem.ProgressValue = progress.Percentage;
             progressBox.progressTitle.Text = $"Downloading {progress.FileName}...";
-            progressBox.progressText.Text = $"{Math.Round(progress.Percentage * 100, 2)}% " +
-                $"({StringConverters.FormatSize(progress.DownloadedBytes)} of {StringConverters.FormatSize(progress.TotalBytes)})";
+            progressBox.progressText.Text = progress.ToDisplayText();
         }
         private static bool UpdateAvailable(string onlineVersion, string localVersion)
         {

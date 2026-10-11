@@ -11,7 +11,7 @@
         xmlns:module="clr-namespace:DivaModManager.Features.Module"
         xmlns:converters="clr-namespace:DivaModManager.Common.Converters"
         Background="#131313"
-        Title="DivaModManager by Enomoto"
+        Title="DivaModManager by Hanserm"
         SizeChanged="OnResize"
         mc:Ignorable="d"
         Closing="Window_Closing"
@@ -742,14 +742,13 @@
                             <ComboBoxItem Content="Executable" IsSelected="True"/>
                             <ComboBoxItem Content="Steam"/>
                         </ComboBox>
-                        <ComboBox Name="DMLConsoleBox" Grid.Column="6" Grid.Row="0" Text="Console" ToolTip="DML Console Enabled" FontSize="18" FontFamily="{StaticResource DmmFont}" IsEditable="False" Margin="0,8,10,8" SelectionChanged="DMLConsoleBox_SelectionChanged">
-                            <ComboBoxItem Content="Console" IsSelected="True"/>
-                            <ComboBoxItem Content="True"/>
-                            <ComboBoxItem Content="False"/>
+                        <ComboBox Name="DMLConsoleBox" Grid.Column="6" Grid.Row="0" ToolTip="Show the DivaModLoader console window when the game starts (useful to see mod logs and errors)." FontSize="18" FontFamily="{StaticResource DmmFont}" IsEditable="False" Margin="0,0,10,0" Height="35" SelectionChanged="DMLConsoleBox_SelectionChanged">
+                            <ComboBoxItem Content="Console: Off" IsSelected="True"/>
+                            <ComboBoxItem Content="Console: On"/>
                         </ComboBox>
                         <Button Name="CoreUpdateButton" Foreground="#f2f2f2" FontSize="18" Content="Core Update" Margin="0,0,10,0" Height="35" 
                                 VerticalAlignment="Center" HorizontalAlignment="Stretch" Grid.Column="7" Background="#181818" BorderBrush="#252525" FontFamily="{StaticResource DmmFont}" 
-                                Click="CoreUpdateButton_Click" ToolTip="Updates to DivaModLoader and DivaModManager by Enomoto."/>
+                                Click="CoreUpdateButton_Click" ToolTip="Updates to DivaModLoader and DivaModManager by Hanserm."/>
                         <TextBox Name="SearchModListTextBox" Grid.Column ="0" Grid.Row ="1" Grid.ColumnSpan="3" Margin="10,0,90,0" TextWrapping="Wrap" 
                                  VerticalAlignment="Center" FontSize="18" KeyDown="SearchModListTextBox_KeyDown"
                                  Foreground="#303030" Padding="4,0,0,0" FontFamily="{StaticResource DmmFont}" IsEnabled="False" 

@@ -220,7 +220,7 @@ namespace DivaModManager
                         if (!p.Responding)
                         {
                             cnt++;
-                            var resMessageBox = MessageBox.Show($"DivaModManager by Enomoto ({cnt}) is already running but is not responding.\nDo you want to force quit it?", "Warning", MessageBoxButton.OKCancel, MessageBoxImage.Exclamation);
+                            var resMessageBox = MessageBox.Show($"DivaModManager by Hanserm ({cnt}) is already running but is not responding.\nDo you want to force quit it?", "Warning", MessageBoxButton.OKCancel, MessageBoxImage.Exclamation);
                             if (resMessageBox == MessageBoxResult.OK)
                             {
                                 try
@@ -268,7 +268,7 @@ namespace DivaModManager
             {
                 //p.WaitForInputIdle();
 
-                MessageBox.Show("DivaModManager by Enomoto is already running", "Warning", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                MessageBox.Show("DivaModManager by Hanserm is already running", "Warning", MessageBoxButton.OK, MessageBoxImage.Exclamation);
 
                 using MainWindow mainWindow = new();
                 var x = (SystemParameters.PrimaryScreenWidth / 2) - (mainWindow.MinWidth / 2);

@@ -103,8 +103,8 @@ namespace DivaModManager.Common.Config
         private bool? _DivaModLoaderUpdateCheck { get; set; } = true;
 
         [DataMember(Name = "divamodmanager_update_check")]
-        [DataMemberCommentEN("Check for updates to DivaModManager by Enomoto when the tool starts.\nDefault : true")]
-        [DataMemberCommentJP("ツールの起動時にDivaModManager by Enomoto のアップデートを確認します。\nDefault：true")]
+        [DataMemberCommentEN("Check for updates to DivaModManager by Hanserm when the tool starts.\nDefault : true")]
+        [DataMemberCommentJP("ツールの起動時にDivaModManager by Hanserm のアップデートを確認します。\nDefault：true")]
         public bool DivaModManagerUpdateCheck
         {
             get { return _DivaModManagerUpdateCheck != null && (bool)_DivaModManagerUpdateCheck; }

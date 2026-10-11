@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:DivaModManager.Misk"
         xmlns:fa5="http://schemas.fontawesome.com/icons/"
         mc:Ignorable="d"
-        Title="Diva Mod Manager by Enomoto" WindowStartupLocation="CenterScreen"
+        Title="Diva Mod Manager by Hanserm" WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize" MinWidth="600" FontFamily="{StaticResource DmmFont}"
         Background="#202020" ShowActivated="True" Closing="Window_Closing" SizeToContent="WidthAndHeight">
     <Window.Resources>

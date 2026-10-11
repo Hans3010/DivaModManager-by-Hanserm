@@ -1,5 +1,29 @@
 
-DivaModManager by Enomoto v1.3.1.35
+DivaModManager by Hanserm v1.3.1.35
+
+## Credits
+
+* Based on DivaModManager by Enomoto (https://github.com/enomoto-r02/DivaModManager-by-Enomoto)
+* Originally created by TekkaGB (DivaModManager)
+* Licensed under GPL-3.0
+
+## Changes in this fork
+
+* Fixed config.toml retry logic: a temporary file lock could leave the enabled mod list unsaved, so mods were not applied in game.
+* Launch: warns if the game is already running instead of silently failing.
+* Launch: uses Steam to start the game when Steam is not running, avoiding the first launch closing itself.
+* Launch: warns when the mod configuration could not be saved.
+* Implemented the Console option (it was disabled and unfinished): turns the DivaModLoader console window on or off.
+* Fixed read-only folders from archives blocking cleanup of temporary folders.
+* Downloads: interrupted or stalled downloads now retry automatically and resume where they stopped (no more stuck progress bars).
+* Downloads: server errors and incomplete files are reported instead of being installed as a broken mod.
+* Downloads: added Pause/Resume button, download speed and time remaining.
+* Fixed the update dialog showing the wrong file size (e.g. 5.9 KB for DivaModLoader).
+* Extraction: fixed a deadlock where large archives froze the manager forever (7-Zip output was never read).
+* Extraction: added a progress window with percentage; closing it cancels the extraction.
+* Extraction: the window no longer freezes while extracting.
+* Fixed temporary extraction folders (Downloads\temp_*) never being deleted, which wasted gigabytes of disk space.
+* Extraction: the 260-character path check now measures the final path in the game's mods folder instead of the temporary folder, so mods are no longer rejected just because DMM is stored in a deep folder.
 
 ## Notice (Please Read)
 
