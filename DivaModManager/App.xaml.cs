@@ -343,14 +343,12 @@ namespace DivaModManager
         {
             if (Global.ConfigToml.LanguageDialog)
             {
-                var ret = WindowHelper.DMMWindowOpenAsync(28);
-                if (ret.Result == WindowHelper.WindowCloseStatus.Cancel)
+                // 英語・日本語・スペイン語から選べるドロップダウン（既定は英語）
+                var languageWindow = new Common.MessageWindow.LanguageWindow(Global.ConfigToml.Language);
+                if (languageWindow.ShowDialog() != true)
                     Environment.Exit(0);
-                else if (ret.Result == WindowHelper.WindowCloseStatus.Yes || ret.Result == WindowHelper.WindowCloseStatus.YesCheck)
-                    Global.ConfigToml.Language = ConfigTomlDmm.Lang.JP.ToString().ToUpper();
-                else
-                    Global.ConfigToml.Language = ConfigTomlDmm.Lang.EN.ToString().ToUpper();
-                if (ret.Result == WindowHelper.WindowCloseStatus.YesCheck || ret.Result == WindowHelper.WindowCloseStatus.NoCheck)
+                Global.ConfigToml.Language = languageWindow.SelectedLanguage;
+                if (languageWindow.DontShowAgain)
                     Global.ConfigToml.LanguageDialog = false;
             }
         }

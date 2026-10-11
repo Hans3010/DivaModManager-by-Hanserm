@@ -1,0 +1,21 @@
+<Window x:Class="DivaModManager.Common.MessageWindow.LanguageWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Language / 言語 / Idioma" SizeToContent="Height" Width="460" ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen" Background="#202020" FontFamily="{StaticResource DmmFont}">
+    <StackPanel Margin="24,20,24,20">
+        <TextBlock Text="Select Language / 言語を選択 / Seleccionar idioma" Foreground="White" FontSize="18" FontWeight="Bold"
+                   HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+        <TextBlock Text="You can change it later in Option. / Optionで後から変更できます。 / Puedes cambiarlo después en Option."
+                   Foreground="#b0b0b0" FontSize="13" Margin="0,8,0,16" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+        <ComboBox Name="LanguageComboBox" Height="36" FontSize="18" SelectedIndex="0">
+            <ComboBoxItem Content="English" Tag="EN"/>
+            <ComboBoxItem Content="日本語 (Japanese)" Tag="JP"/>
+            <ComboBoxItem Content="Español (Spanish)" Tag="ES"/>
+        </ComboBox>
+        <CheckBox Name="DontShowAgainCheckBox" Margin="0,14,0,0" Foreground="White" FontSize="14" IsChecked="True"
+                  Content="Don't show this again / 次回から表示しない / No volver a mostrar"/>
+        <Button Content="OK" Height="36" Margin="0,18,0,0" FontSize="18" IsDefault="True" Click="OkButton_Click"
+                Foreground="#f2f2f2" Background="#181818" BorderBrush="#454545"/>
+    </StackPanel>
+</Window>
