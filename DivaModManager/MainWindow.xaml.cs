@@ -2797,6 +2797,44 @@ namespace DivaModManager
                 });
             }
         }
+        /// <summary>DivaModArchive のカードの作者をクリック: その作者の Mod を表示する</summary>
+        private async void DMAAuthor_Click(object sender, MouseButtonEventArgs e)
+        {
+            if ((sender as FrameworkElement)?.DataContext is not DivaModArchiveUser author) return;
+            e.Handled = true;
+            DMALoadPanel.Visibility = Visibility.Visible;
+            DMAFeedBox.Visibility = Visibility.Collapsed;
+            try
+            {
+                var posts = await DMAFeedGenerator.GetAuthorPostsAsync(author);
+                BrowserMarks.Mark(posts);
+                DMAFavoritesCheckBox.IsChecked = false;
+                DMAFeedBox.ItemsSource = posts;
+                DMAPage.Text = UiTranslator.Format("Mods by {0} ({1})", author.DisplayName ?? author.Name, posts.Count);
+                Logger.WriteLine($"DivaModArchive: {posts.Count} mods by {author.Name}. Search or change page to go back.", LoggerType.Info);
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLine($"Couldn't get the mods by {author.Name}: {ex.Message}", LoggerType.Warning);
+            }
+            finally
+            {
+                DMALoadPanel.Visibility = Visibility.Collapsed;
+                DMAFeedBox.Visibility = Visibility.Visible;
+            }
+        }
+
+        /// <summary>GameBanana のカードの作者をクリック: 作者のページ（投稿一覧）を開く</summary>
+        private void GBAuthor_Click(object sender, MouseButtonEventArgs e)
+        {
+            if ((sender as FrameworkElement)?.DataContext is not GameBananaRecord record || record.Owner == null) return;
+            e.Handled = true;
+            var url = record.Owner.ProfileUrl != null
+                ? record.Owner.ProfileUrl.ToString().TrimEnd('/') + "/submissions"
+                : $"https://gamebanana.com/search?_sSearchString={Uri.EscapeDataString(record.Owner.Name ?? "")}";
+            ProcessHelper.TryStartProcess(url);
+        }
+
         private static bool DMAselected = false;
         private async void DMARefreshFilterAsync()
         {

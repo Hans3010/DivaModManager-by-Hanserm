@@ -153,6 +153,8 @@ namespace DivaModManager
         public Uri Avatar { get; set; }
         [JsonPropertyName("_sUpicUrl")]
         public Uri Upic { get; set; }
+        [JsonPropertyName("_sProfileUrl")]
+        public Uri ProfileUrl { get; set; }
         [JsonIgnore]
         public bool HasUpic => Upic.OriginalString.Length > 0;
     }

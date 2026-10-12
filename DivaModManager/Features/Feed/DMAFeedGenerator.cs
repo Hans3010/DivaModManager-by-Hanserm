@@ -158,6 +158,28 @@ namespace DivaModManager.Features.Feed
             return age.TotalHours < cacheHours;
         }
 
+        /// <summary>
+        /// 作者の Mod を集める。API は作者で絞り込めないので、作者名で検索して作者が一致する投稿だけ残す
+        /// </summary>
+        public static async Task<ObservableCollection<DivaModArchivePost>> GetAuthorPostsAsync(DivaModArchiveUser author)
+        {
+            var result = new ObservableCollection<DivaModArchivePost>();
+            var seen = new HashSet<long>();
+            const int limit = 20;
+            for (var page = 0; page < 10; page++)
+            {
+                var url = $"https://divamodarchive.com/api/v1/posts?sort=time:desc&query={Uri.EscapeDataString(author.Name ?? "")}&offset={page * limit}&limit={limit}";
+                var response = await Global.DMAclient.GetAsync(url);
+                var posts = JsonSerializer.Deserialize<List<DivaModArchivePost>>(await response.Content.ReadAsStringAsync());
+                if (posts == null || posts.Count == 0) break;
+                foreach (var post in posts)
+                    if (post.Authors != null && post.Authors.Any(a => a.ID == author.ID) && seen.Add(post.ID))
+                        result.Add(post);
+                if (posts.Count < limit) break;
+            }
+            return result;
+        }
+
         private static string GenerateUrl(int page, DMAFeedSort sort, DMAFeedFilter filter, string search, int limit)
         {
             // Base

@@ -155,7 +155,8 @@
                         </Border>
                     </Popup>
                     <!-- Row 2: Author -->
-                    <StackPanel Grid.Row="2" Margin="10,-5,10,5" Orientation="Horizontal">
+                    <StackPanel Grid.Row="2" Margin="10,-5,10,5" Orientation="Horizontal" Background="Transparent" Cursor="Hand"
+                                ToolTip="Open this author's page" MouseLeftButtonUp="GBAuthor_Click">
                         <Image VerticalAlignment="Center" Source="{Binding Path=Owner.Avatar}" Margin="0,0,10,0" Height="35"/>
                         <TextBlock VerticalAlignment="Center" FontFamily="{StaticResource DmmFont}" Foreground="#909090" Text="{Binding Path=Owner.Name}"/>
                         <Image VerticalAlignment="Center" Source="{Binding Path=Owner.Upic, Converter={StaticResource ImageCache}, ConverterParameter=24}" Height="25"/>
@@ -490,7 +491,8 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,12,0" Background="Transparent" Cursor="Hand"
+                                            ToolTip="See this author's mods" MouseLeftButtonUp="DMAAuthor_Click">
                                     <Image VerticalAlignment="Center" Source="{Binding Path=Avatar, Converter={StaticResource ImageCache}, ConverterParameter=24}" Margin="0,0,8,0" Height="35"/>
                                     <TextBlock VerticalAlignment="Center" FontFamily="{StaticResource DmmFont}" Foreground="#909090" Text="{Binding Path=Name}"/>
                                 </StackPanel>
