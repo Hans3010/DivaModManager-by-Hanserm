@@ -598,9 +598,13 @@ namespace DivaModManager
                 .ToList();
         }
 
+        /// <summary>インストール済みのすべての Mod（無効のものも）。必要な Mod の確認に使う</summary>
+        private IReadOnlyList<ModRequirements.InstalledMod> GetInstalledMods() =>
+            ModHealthScanner.DescribeInstalled((Global.ModList_All ?? new ObservableCollection<Mod>()).Select(m => (m.name, m.directory_path, m.enabled)));
+
         private void ConflictsButton_Click(object sender, RoutedEventArgs e)
         {
-            var window = new ConflictWindow(GetEnabledModsInPriority) { Owner = this };
+            var window = new ConflictWindow(GetEnabledModsInPriority, GetInstalledMods) { Owner = this };
             window.ShowDialog();
             _ = UpdateConflictIndicatorAsync();
         }
@@ -613,8 +617,11 @@ namespace DivaModManager
             try
             {
                 var mods = GetEnabledModsInPriority();
+                var installed = GetInstalledMods();
                 var gameDir = ModHealthScanner.GameDir;
-                var (conflicts, problems) = await Task.Run(() => (ModConflictScanner.Scan(mods), ModHealthScanner.Scan(mods, gameDir)));
+                try { await ModRequirements.RefreshAsync(installed.Select(m => m.Homepage).Where(h => h != null)); }
+                catch (Exception) { }
+                var (conflicts, problems) = await Task.Run(() => (ModConflictScanner.Scan(mods), ModHealthScanner.Scan(mods, gameDir, installed)));
                 var important = problems.Count(p => p.Severity != HealthSeverity.Info);
                 var total = conflicts.Count + important;
                 ConflictsButton.Content = total > 0 ? $"{UiTranslator.T("Check mods")} ({total})" : UiTranslator.T("Check mods");
@@ -1044,7 +1051,8 @@ namespace DivaModManager
                     // 起動前に、ゲームが落ちる・曲が読めない原因になる問題（エラー）だけ確認する
                     var mods = GetEnabledModsInPriority();
                     var gameDir = ModHealthScanner.GameDir;
-                    var errors = (await Task.Run(() => ModHealthScanner.Scan(mods, gameDir))).Where(p => p.Severity == HealthSeverity.Error).ToList();
+                    var installed = GetInstalledMods();
+                    var errors = (await Task.Run(() => ModHealthScanner.Scan(mods, gameDir, installed))).Where(p => p.Severity == HealthSeverity.Error).ToList();
                     if (errors.Count > 0 && !ConfirmLaunchWithProblems(errors))
                         return;
 

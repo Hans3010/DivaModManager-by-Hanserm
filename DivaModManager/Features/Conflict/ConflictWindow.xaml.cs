@@ -15,11 +15,13 @@ namespace DivaModManager.Features.Conflict
     public partial class ConflictWindow : Window
     {
         private readonly Func<IReadOnlyList<(string Name, string Path)>> getEnabledMods;
+        private readonly Func<IReadOnlyList<ModRequirements.InstalledMod>> getInstalledMods;
 
-        public ConflictWindow(Func<IReadOnlyList<(string Name, string Path)>> getEnabledMods)
+        public ConflictWindow(Func<IReadOnlyList<(string Name, string Path)>> getEnabledMods, Func<IReadOnlyList<ModRequirements.InstalledMod>> getInstalledMods = null)
         {
             InitializeComponent();
             this.getEnabledMods = getEnabledMods;
+            this.getInstalledMods = getInstalledMods;
             // 列ヘッダーは共通の翻訳から除外されているので、ここで翻訳する（このウィンドウではコードが見出しを使わない）
             foreach (var grid in new[] { ConflictGrid, ProblemGrid })
                 foreach (var column in grid.Columns)
@@ -35,8 +37,15 @@ namespace DivaModManager.Features.Conflict
             ProblemGrid.ItemsSource = null;
 
             var mods = getEnabledMods();
+            var installed = getInstalledMods?.Invoke();
             var gameDir = ModHealthScanner.GameDir;
-            var (conflicts, problems) = await Task.Run(() => (ModConflictScanner.Scan(mods), ModHealthScanner.Scan(mods, gameDir)));
+            // GameBanana / DivaModArchive の「必要な Mod」を更新する（1 日 1 回）
+            using (var timeout = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(20)))
+            {
+                try { await ModRequirements.RefreshAsync((installed ?? new List<ModRequirements.InstalledMod>()).Select(m => m.Homepage).Where(h => h != null), timeout.Token); }
+                catch (Exception) { }
+            }
+            var (conflicts, problems) = await Task.Run(() => (ModConflictScanner.Scan(mods), ModHealthScanner.Scan(mods, gameDir, installed)));
 
             ConflictGrid.ItemsSource = conflicts;
             ProblemGrid.ItemsSource = problems.OrderBy(p => p.Severity).ThenBy(p => p.Mod).ToList();
@@ -92,6 +101,19 @@ namespace DivaModManager.Features.Conflict
             }
             MessageBox.Show(this, string.Join("\n\n", results), "Fix thumbnails", MessageBoxButton.OK, MessageBoxImage.Information);
             await ScanAsync();
+        }
+
+        private void ProblemGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            InstallButton.IsEnabled = ProblemGrid.SelectedItem is HealthIssue { InstallUrl: not null };
+        }
+
+        private async void InstallButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (ProblemGrid.SelectedItem is not HealthIssue { InstallUrl: not null } issue) return;
+            InstallButton.IsEnabled = false;
+            await RequirementInstaller.InstallAsync(issue.InstallUrl, issue.InstallName);
+            InstallButton.IsEnabled = true;
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e) => Close();

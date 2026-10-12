@@ -23,6 +23,9 @@ namespace DivaModManager.Features.Health
         /// <summary>英語の種類名（表示は SeverityText / KindText で翻訳）</summary>
         public string Kind { get; set; }
         public string Detail { get; set; }
+        /// <summary>必要な Mod のページ（あれば「インストール」ボタンで使う）</summary>
+        public string InstallUrl { get; set; }
+        public string InstallName { get; set; }
 
         public string SeverityText => UiTranslator.T(Severity switch
         {
@@ -53,7 +56,8 @@ namespace DivaModManager.Features.Health
             }
         }
 
-        public static List<HealthIssue> Scan(IReadOnlyList<(string Name, string Path)> mods, string gameDir)
+        /// <param name="installed">インストール済みのすべての Mod（無効のものも）。必要な Mod の確認に使う。null なら有効な Mod だけ</param>
+        public static List<HealthIssue> Scan(IReadOnlyList<(string Name, string Path)> mods, string gameDir, IReadOnlyList<ModRequirements.InstalledMod> installed = null)
         {
             var issues = new List<HealthIssue>();
             var valid = mods.Where(m => !string.IsNullOrEmpty(m.Path) && Directory.Exists(m.Path)).ToList();
@@ -77,6 +81,10 @@ namespace DivaModManager.Features.Health
             foreach (var (name, path, list) in dlls)
                 CheckDlls(name, path, list, gameDir, loadedDllNames, issues);
 
+            installed ??= dlls.Select(d => new ModRequirements.InstalledMod { Name = d.Name, Path = d.Path, Enabled = true, Homepage = ModRequirements.ReadHomepage(d.Path), DllNames = d.Dlls }).ToList();
+            foreach (var (name, path) in valid)
+                CheckRequirements(name, path, installed, issues);
+
             foreach (var (name, path) in valid)
             {
                 var pvDb = Path.Combine(path, "rom", "mod_pv_db.txt");
@@ -85,6 +93,60 @@ namespace DivaModManager.Features.Health
             }
             return issues;
         }
+
+        #region 必要な Mod
+
+        /// <summary>インストール済みの Mod の一覧（必要な Mod の確認用）</summary>
+        public static List<ModRequirements.InstalledMod> DescribeInstalled(IEnumerable<(string Name, string Path, bool Enabled)> mods) =>
+            mods.Where(m => !string.IsNullOrEmpty(m.Path) && Directory.Exists(m.Path))
+                .Select(m => new ModRequirements.InstalledMod { Name = m.Name, Path = m.Path, Enabled = m.Enabled, Homepage = ModRequirements.ReadHomepage(m.Path), DllNames = ReadDllList(m.Path) })
+                .ToList();
+
+        private static void CheckRequirements(string mod, string modPath, IReadOnlyList<ModRequirements.InstalledMod> installed, List<HealthIssue> issues)
+        {
+            var requirements = new List<Requirement>(ModRequirements.GetCached(ModRequirements.ReadHomepage(modPath)));
+            // ファイルから分かる必要 Mod
+            if (File.Exists(Path.Combine(modPath, "rom", "nc_db.toml"))) requirements.Add(ModRequirements.NewClassics);
+            var lyrics = Path.Combine(modPath, "lyrics");
+            if (Directory.Exists(lyrics) && Directory.EnumerateFiles(lyrics, "*.toml").Any()) requirements.Add(ModRequirements.LyricsPatch);
+
+            var others = installed.Where(m => !string.Equals(m.Path, modPath, StringComparison.OrdinalIgnoreCase)).ToList();
+            var self = installed.FirstOrDefault(m => string.Equals(m.Path, modPath, StringComparison.OrdinalIgnoreCase));
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var req in requirements)
+            {
+                if (ModRequirements.IsModLoader(req) || !seen.Add(req.Url + "|" + req.Name)) continue;
+                // その Mod 自身が必要なものを含んでいる（例: Spanish Lyrics に入っている OpenLyricLimit）
+                if (self != null && self.DllNames.Any(d => ModRequirements.MatchesDll(req, d))) continue;
+                var found = ModRequirements.FindInstalled(req, others);
+                if (found == null)
+                {
+                    issues.Add(new HealthIssue
+                    {
+                        Severity = req.Optional ? HealthSeverity.Info : HealthSeverity.Error,
+                        Mod = mod,
+                        Kind = req.Optional ? "Recommended mod" : "Missing required mod",
+                        Detail = req.Optional
+                            ? UiTranslator.Format("{0} recommends {1}. Select this row and click Install to get it.", mod, req.Name)
+                            : UiTranslator.Format("{0} needs {1}, which isn't installed. Select this row and click Install to get it.", mod, req.Name),
+                        InstallUrl = req.Url,
+                        InstallName = req.Name,
+                    });
+                }
+                else if (!found.Enabled && !req.Optional)
+                {
+                    issues.Add(new HealthIssue
+                    {
+                        Severity = HealthSeverity.Warning,
+                        Mod = mod,
+                        Kind = "Required mod disabled",
+                        Detail = UiTranslator.Format("{0} needs {1}, which is installed but disabled. Enable it in the mod list.", mod, found.Name),
+                    });
+                }
+            }
+        }
+
+        #endregion
 
         #region DLL
 

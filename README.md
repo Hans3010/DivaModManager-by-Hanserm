@@ -43,6 +43,7 @@ Get the latest version from [Releases](https://github.com/Hans3010/DivaModManage
 
 **Check mods**
 - The **Check mods** window also lists problems: mod DLLs that won't load (missing DLL, or a DLL that needs libraries the game can't find, which DivaModLoader reports as "Failed to load"), song charts, audio or videos that are missing, and songs with more than 150 lyric lines without OpenLyricLimit.
+- **Missing required mods**: reads each mod's requirements from GameBanana (requirements list and "requires ..." links in the description) and DivaModArchive (dependencies), plus what the files show (`rom/nc_db.toml` needs New Classics, `lyrics/*.toml` needs LyricsPatch). Select the row and click **Install** to download the missing mod with the one-click installer.
 - **Launch** checks for errors first and asks before starting the game.
 - Search the mod list by **song name or ID** to find which mod has a song.
 
