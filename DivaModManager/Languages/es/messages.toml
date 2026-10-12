@@ -366,7 +366,8 @@ button_1 = "Sí"
 button_2 = "No"
 [WINDOW-0075]
 info = "¿Borrar los mods seleccionados? ({0})"
-window_title = "Información"
+context = "{1}"
+window_title = "Borrar mods"
 [WINDOW-0076]
 info = "{0}"
 window_title = "Información de versión"

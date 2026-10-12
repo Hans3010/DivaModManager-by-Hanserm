@@ -1201,7 +1201,10 @@ namespace DivaModManager
             var selectedMods = ModGrid.SelectedItems.OfType<Mod>().ToList();
             if (!selectedMods.Any()) return;
 
-            List<string> replaceList = new() { selectedMods.Count.ToString() };
+            // {0} = 数、{1} = 削除する Mod の名前（多いときは最初の 10 個）
+            var names = selectedMods.Take(10).Select(m => $"• {m.name}").ToList();
+            if (selectedMods.Count > 10) names.Add(UiTranslator.Format("...and {0} more", selectedMods.Count - 10));
+            List<string> replaceList = new() { selectedMods.Count.ToString(), string.Join("\n", names) };
             var dialogResult = WindowHelper.MessageBoxOpen(75, replaceList, MessageBoxButton.OKCancel);
             if (dialogResult == MessageBoxResult.OK)
             {

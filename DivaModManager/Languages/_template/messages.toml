@@ -370,8 +370,9 @@ window_title = "Information"
 button_1 = "Yes"
 button_2 = "No"
 [WINDOW-0075]
-info = "The selected {0} mods will be deleted. Are you sure?"
-window_title = "Information"
+info = "Delete the selected mods? ({0})"
+context = "{1}"
+window_title = "Delete mods"
 [WINDOW-0076]
 info = "{0}"
 window_title = "Version Information"
