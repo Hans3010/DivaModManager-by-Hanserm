@@ -365,7 +365,7 @@ window_title = "Información"
 button_1 = "Sí"
 button_2 = "No"
 [WINDOW-0075]
-info = "Se borrarán los {0} mods seleccionados. ¿Estás seguro?"
+info = "¿Borrar los mods seleccionados? ({0})"
 window_title = "Información"
 [WINDOW-0076]
 info = "{0}"

@@ -121,7 +121,8 @@ namespace DivaModManager.Common.MessageWindow
             if (numList.Count > 0)
                 numMax = numList.ToList().Max(x => x) + 1;
             else
-                return message;
+                // 置き換える {0} がなくても "none"（空欄の印）は消す
+                return regex.Replace(message, "");
             for (var n = 0; n < numMax; n++)
             {
                 var rep = "{" + n + "}";
