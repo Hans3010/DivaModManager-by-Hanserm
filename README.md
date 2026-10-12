@@ -47,6 +47,8 @@ Your Mega Mix+ save is backed up every time you press **Launch** (last 15 kept) 
 
 ![DivaModArchive browser](docs/screenshots/browser-installed.jpg)
 
+![GameBanana browser](docs/screenshots/gamebanana-installed.jpg)
+
 ### Languages
 
 Spanish translation, and new languages can be added without programming ([TRANSLATING.md](TRANSLATING.md)).
