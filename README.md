@@ -12,6 +12,49 @@ Get the latest version from [Releases](https://github.com/Hans3010/DivaModManage
 - **`…-Windows-Full.zip`**: .NET included, nothing to install (bigger download).
 - **`…-Linux.zip`** (experimental): for Linux and Steam Deck through Wine or Proton, .NET included.
 
+## New features
+
+![Mods tab](docs/screenshots/mods-tab.jpg)
+
+### Check mods
+
+One window for everything that can go wrong with your enabled mods:
+
+- **Conflicts**: mods that overwrite each other (same files, song IDs, module IDs) and which one wins. **Fix thumbnails** lets two song packs both show their thumbnails.
+- **Problems**: mod DLLs that won't load ("Failed to load"), missing charts, audio or videos, and songs with more than 150 lyric lines.
+- **Missing required mods**: reads each mod's requirements from GameBanana and DivaModArchive and installs the missing one with **Install**.
+- **Ignore** hides problems that only the mod's author can fix.
+
+![Check mods](docs/screenshots/check-mods.jpg)
+
+**Launch** checks for errors first and asks before starting the game:
+
+![Check before launching](docs/screenshots/launch-check.jpg)
+
+### Song tab
+
+Every song your mods add, with its ID, names, mod and difficulties, and whether it's in game or replaced by another mod with the same ID. Search as you type and double-click a song to jump to its mod.
+
+![Song tab](docs/screenshots/song-tab.jpg)
+
+### Save backups and disk space
+
+Your Mega Mix+ save is backed up every time you press **Launch** (last 15 kept) and can be restored from the **Option** tab, which also shows how much space mods, downloads and caches take, with buttons to clean them.
+
+![Option tab](docs/screenshots/option-tab.jpg)
+
+### Mod browsers
+
+**Installed** badge on mods you already have, **favorites**, and clicking an author shows all their mods (DivaModArchive) or opens their page (GameBanana).
+
+![DivaModArchive browser](docs/screenshots/browser-installed.jpg)
+
+### Languages
+
+Spanish translation, and new languages can be added without programming ([TRANSLATING.md](TRANSLATING.md)).
+
+![Spanish](docs/screenshots/spanish.jpg)
+
 ### Changes in this fork
 
 **Launching the game**
