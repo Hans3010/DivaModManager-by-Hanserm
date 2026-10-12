@@ -23,7 +23,7 @@ namespace DivaModManager.Features.Setup
                     var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 1761390");
                     if (!string.IsNullOrEmpty(key?.GetValue("InstallLocation") as string))
                         defaultPath = $"{key.GetValue("InstallLocation") as string}{Global.s}DivaMegaMix.exe";
-                    // InstallLocation が空のことがあるので、Steam のライブラリフォルダからも探す
+                    // InstallLocation can be empty, so also look in the Steam library folders
                     if (!File.Exists(defaultPath))
                         defaultPath = FindInSteamLibraries(exe) ?? defaultPath;
                 }
@@ -106,7 +106,7 @@ namespace DivaModManager.Features.Setup
             return true;
         }
 
-        /// <summary>Steam の libraryfolders.vdf に書かれた各ライブラリの common フォルダからゲームを探す</summary>
+        /// <summary>Looks for the game in the common folder of each library listed in Steam's libraryfolders.vdf</summary>
         private static string FindInSteamLibraries(string exe)
         {
             try

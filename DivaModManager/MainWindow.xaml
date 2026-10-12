@@ -108,7 +108,7 @@
                         </Rectangle.OpacityMask>
                     </Rectangle>
                     <Image Name="LoadingBar" Grid.Row="0" gif:ImageBehavior.AnimatedSource="pack://application:,,,/Assets/load.gif" Panel.ZIndex="1" VerticalAlignment="Center" HorizontalAlignment="Center" Height="100"/>
-                    <!-- インストール済みの印とお気に入りボタン -->
+                    <!-- Installed badge and favorite button -->
                     <Grid Grid.Row="0" Panel.ZIndex="5" Margin="12,16,12,0" VerticalAlignment="Top">
                         <Border HorizontalAlignment="Left" VerticalAlignment="Top" CornerRadius="4" Background="#E01A7F37" Padding="8,2">
                             <Border.Style>
@@ -241,7 +241,7 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition/>
                         </Grid.ColumnDefinitions>
-                        <!-- 以前はアイコンと名前が2つずつあり、名前が2列にまたがってアイコンの下に重なっていた -->
+                        <!-- It used to show the icon and name twice, and the name spread across two columns under the icon -->
                         <Image Name="CatIcon" Grid.Column="0" VerticalAlignment="Center" Source="{Binding Path=Category.Icon, Converter={StaticResource ImageCache}, ConverterParameter=24}" Margin="0,0,10,0" Stretch="Uniform" Height="35" Width="35"/>
                         <TextBlock Name="CatText" FontFamily="{StaticResource DmmFont}" VerticalAlignment="Center" Foreground="#f2f2f2" Text="{Binding Path=CategoryName}" TextTrimming="WordEllipsis">
                             <TextBlock.Style>
@@ -435,7 +435,7 @@
                         </Image.Style>
                     </Image>
                     <Image Name="DMALoadingBar" Grid.Row="0" gif:ImageBehavior.AnimatedSource="pack://application:,,,/Assets/load.gif" Panel.ZIndex="1" VerticalAlignment="Center" HorizontalAlignment="Center" Height="100"/>
-                    <!-- インストール済みの印とお気に入りボタン -->
+                    <!-- Installed badge and favorite button -->
                     <Grid Grid.Row="0" Panel.ZIndex="5" Margin="12,16,12,0" VerticalAlignment="Top">
                         <Border HorizontalAlignment="Left" VerticalAlignment="Top" CornerRadius="4" Background="#E01A7F37" Padding="8,2">
                             <Border.Style>
@@ -482,7 +482,7 @@
                         </Border>
                     </Popup>
                     <!-- Row 2: Author -->
-                    <!-- 以前は同じ作者のアバターと名前を2回表示していた。作者が複数いる場合は全員を表示する -->
+                    <!-- It used to show the same author's avatar and name twice. With several authors, all of them are shown -->
                     <ItemsControl Grid.Row="2" Margin="10,-5,10,5" ItemsSource="{Binding Path=Authors}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -1656,7 +1656,7 @@
                         </Grid.ColumnDefinitions>
                         <Button Name="OneClickInstallButton" Content="One-Click Install" Grid.Column="0" Grid.Row="0" Foreground="#f2f2f2" FontSize="18" FontWeight="Normal" Margin="10,10,10,10" Height="35" VerticalAlignment="Center" HorizontalAlignment="Stretch" Background="#181818" BorderBrush="#252525" FontFamily="{StaticResource DmmFont}" Click="OneClickInstallButton_Click"/>
                         <Button Name="SettingsBackUpButton" Content="Settings BackUp" Grid.Column="0" Grid.Row="1" Foreground="#f2f2f2" FontSize="18" FontWeight="Normal" Margin="10,0,10,0" Height="35" VerticalAlignment="Center" Background="#181818" BorderBrush="#252525" FontFamily="{StaticResource DmmFont}" Click="SettingsBackUpButton_Click"/>
-                        <!-- 表示言語（変更すると再起動する） -->
+                        <!-- Display language (changing it restarts the app) -->
                         <Grid Grid.Column="0" Grid.Row="2" Margin="10,0,10,0" VerticalAlignment="Center">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -1667,7 +1667,7 @@
                             </ComboBox>
                         </Grid>
 
-                        <!-- セーブデータのバックアップ（ゲーム起動時に自動で作成） -->
+                        <!-- Save data backups (created automatically when the game is launched) -->
                         <TextBlock Grid.Column="1" Grid.Row="0" Text="💾 Save data backups" Foreground="#f2f2f2" FontSize="18" FontFamily="{StaticResource DmmFont}" VerticalAlignment="Center" Margin="10,0,10,0"
                                    ToolTip="Your Mega Mix+ save is backed up every time you press Launch (if it changed). The last 15 backups are kept."/>
                         <Grid Grid.Column="1" Grid.Row="1" Margin="10,0,10,0" VerticalAlignment="Center">
@@ -1688,7 +1688,7 @@
                             <Button Grid.Column="1" Content="Open folder" Height="35" Margin="5,0,0,0" Foreground="#f2f2f2" FontSize="16" Background="#181818" BorderBrush="#252525" FontFamily="{StaticResource DmmFont}" Click="SaveBackupFolderButton_Click"/>
                         </Grid>
 
-                        <!-- 容量（Mod・ダウンロード・キャッシュ） -->
+                        <!-- Disk space (mods, downloads, caches) -->
                         <TextBlock Grid.Column="2" Grid.Row="0" Grid.ColumnSpan="2" Text="💽 Disk space" Foreground="#f2f2f2" FontSize="18" FontFamily="{StaticResource DmmFont}" VerticalAlignment="Center" Margin="10,0,10,0"/>
                         <TextBlock Name="DiskSpaceText" Grid.Column="2" Grid.Row="1" Grid.RowSpan="4" Grid.ColumnSpan="2" Foreground="#d0d0d0" FontSize="15" FontFamily="{StaticResource DmmFont}" Margin="10,4,10,0" TextWrapping="Wrap"/>
                         <Grid Grid.Column="2" Grid.Row="5" Grid.ColumnSpan="2" Margin="10,0,10,0" VerticalAlignment="Center">

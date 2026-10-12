@@ -7,8 +7,8 @@ using System.Text;
 namespace DivaModManager.Common.Helpers
 {
     /// <summary>
-    /// Project DIVA の FARC アーカイブ（FArc: 非圧縮 / FArC: gzip 圧縮）を読み込む
-    /// 暗号化された FARC 形式には対応しない（Mod では通常使われない）
+    /// Reads Project DIVA FARC archives (FArc: uncompressed / FArC: gzip-compressed)
+    /// Encrypted FARC formats are not supported (mods don't normally use them)
     /// </summary>
     public static class FarcReader
     {
@@ -19,9 +19,9 @@ namespace DivaModManager.Common.Helpers
         }
 
         /// <summary>
-        /// FARC 内のファイルを読み込む。読み込めない場合は空のリストを返す
+        /// Reads the files inside a FARC. Returns an empty list if it can't be read
         /// </summary>
-        /// <param name="nameFilter">指定した場合、名前が一致するファイルのみ展開する</param>
+        /// <param name="nameFilter">If given, only files with a matching name are extracted</param>
         public static List<Entry> Read(string path, Func<string, bool> nameFilter = null)
         {
             var entries = new List<Entry>();
@@ -75,7 +75,7 @@ namespace DivaModManager.Common.Helpers
                 }
                 catch (InvalidDataException)
                 {
-                    // 壊れたエントリは無視する
+                    // Skip broken entries
                 }
             }
             return entries;

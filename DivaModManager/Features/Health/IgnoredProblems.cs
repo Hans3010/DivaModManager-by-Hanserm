@@ -7,7 +7,7 @@ using System.Text.Json;
 namespace DivaModManager.Features.Health
 {
     /// <summary>
-    /// 「無視」にした問題（ignored-problems.json）。Mod の作者側の問題など、ユーザーが直せないものを黙らせる
+    /// Problems marked as "ignored" (ignored-problems.json). Silences things the user can't fix, such as problems on the mod author's side
     /// </summary>
     public static class IgnoredProblems
     {

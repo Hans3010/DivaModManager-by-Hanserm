@@ -24,7 +24,7 @@ namespace DivaModManager.Features.DMM
     public class DMMUpdater
     {
         private static readonly string MODULE_NAME = "DivaModManager by Hanserm";
-        // 更新確認・ダウンロードに使う GitHub リポジトリ（フォーク元の enomoto-r02/DivaModManager-by-Enomoto ではない）
+        // GitHub repository used to check for and download updates (not the original enomoto-r02/DivaModManager-by-Enomoto)
         public static readonly string REPO_OWNER = "Hans3010";
         public static readonly string REPO_NAME = "DivaModManager-by-Hanserm";
         public static readonly string RELEASES_URL = $"https://github.com/{REPO_OWNER}/{REPO_NAME}/releases";
@@ -138,7 +138,7 @@ namespace DivaModManager.Features.DMM
             }
             catch (NotFoundException)
             {
-                // リリースがまだ公開されていない場合
+                // No release published yet
                 Logger.WriteLine($"No releases of {MODULE_NAME} have been published yet.", LoggerType.Info);
                 return false;
             }

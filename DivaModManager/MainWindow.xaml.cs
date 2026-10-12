@@ -323,7 +323,7 @@ namespace DivaModManager
 
             SongListTab.ShowModRequested += ShowModInList;
             await App.Current.Dispatcher.InvokeAsync(() => OnFirstOpenAsync());
-            // 最初の起動でもバックアップがあるように、セーブデータが変わっていれば保存しておく
+            // Back up the save if it changed, so there's a backup from the very first launch
             _ = Task.Run(SaveBackup.BackupIfChanged);
             if (!Global.IsWine && Global.ConfigToml.DivaModManagerUpdateCheck)
             {
@@ -473,14 +473,14 @@ namespace DivaModManager
                     IsEnabledControls(true);
                 }
                 _ = UpdateConflictIndicatorAsync();
-                // Mod の追加・削除をブラウザのカード（インストール済みの印）に反映する
+                // Reflect added or removed mods in the browser cards (installed badge)
                 if (GBFeedBox.ItemsSource is System.Collections.IEnumerable gbItems) BrowserMarks.Mark(gbItems.Cast<object>());
                 if (DMAFeedBox.ItemsSource is System.Collections.IEnumerable dmaItems) BrowserMarks.Mark(dmaItems.Cast<object>());
                 Logger.WriteLine(string.Join(" ", MeInfo, $"End."), LoggerType.Debug, param: ParamInfo);
             }
         }
 
-        #region 表示言語
+        #region Display language
 
         private bool isSyncingLanguageComboBox = false;
 
@@ -489,7 +489,7 @@ namespace DivaModManager
             isSyncingLanguageComboBox = true;
             if (LanguageComboBox.Items.Count == 0)
             {
-                // 組み込みの英語・日本語と Languages フォルダの言語
+                // Built-in English and Japanese, plus the languages in the Languages folder
                 foreach (var (code, name) in LanguagePacks.Available)
                     LanguageComboBox.Items.Add(new ComboBoxItem { Content = name, Tag = code });
             }
@@ -520,7 +520,7 @@ namespace DivaModManager
                 var exe = Environment.ProcessPath;
                 if (!string.IsNullOrEmpty(exe))
                 {
-                    // 二重起動チェックに引っかからないよう、終了してから少し待って起動する
+                    // Start after this instance has exited and a short wait, so the already-running check doesn't block it
                     Process.Start(new ProcessStartInfo("cmd.exe", $"/c ping 127.0.0.1 -n 3 > nul & start \"\" \"{exe}\"")
                     {
                         CreateNoWindow = true,
@@ -534,14 +534,14 @@ namespace DivaModManager
 
         #endregion
 
-        #region お気に入り・インストール済み表示（GameBanana / DivaModArchive タブ）
+        #region Favorites and installed badges (GameBanana / DivaModArchive tabs)
 
         private void Favorite_Click(object sender, RoutedEventArgs e)
         {
             e.Handled = true;
             if (sender is not FrameworkElement element) return;
             BrowserMarks.ToggleFavorite(element.DataContext);
-            // お気に入りだけを表示中なら一覧を更新する
+            // Refresh the list if only favorites are shown
             if (element.DataContext is GameBananaRecord && GBFavoritesCheckBox.IsChecked == true)
                 GBFeedBox.ItemsSource = BrowserMarks.GetFavoriteGameBanana();
             else if (element.DataContext is DivaModArchivePost && DMAFavoritesCheckBox.IsChecked == true)
@@ -582,12 +582,12 @@ namespace DivaModManager
 
         #endregion
 
-        #region Mod の競合チェック
+        #region Mod conflict check
 
         private int lastConflictCount = -1;
 
         /// <summary>
-        /// 有効な Mod を DML の読み込み優先度の順（config.toml の priority と同じ順）で返す
+        /// Returns the enabled mods in DML's load priority (the same order as priority in config.toml)
         /// </summary>
         private IReadOnlyList<(string Name, string Path)> GetEnabledModsInPriority()
         {
@@ -600,7 +600,7 @@ namespace DivaModManager
                 .ToList();
         }
 
-        /// <summary>インストール済みのすべての Mod（無効のものも）。必要な Mod の確認に使う</summary>
+        /// <summary>Every installed mod (including disabled ones). Used to check required mods</summary>
         private IReadOnlyList<ModRequirements.InstalledMod> GetInstalledMods() =>
             ModHealthScanner.DescribeInstalled((Global.ModList_All ?? new ObservableCollection<Mod>()).Select(m => (m.name, m.directory_path, m.enabled)));
 
@@ -612,7 +612,7 @@ namespace DivaModManager
         }
 
         /// <summary>
-        /// 競合と問題（エラー・警告）の数をボタンに表示し、増えた場合はログで知らせる
+        /// Shows the number of conflicts and problems (errors and warnings) on the button, and logs when it goes up
         /// </summary>
         private async Task UpdateConflictIndicatorAsync()
         {
@@ -1026,8 +1026,8 @@ namespace DivaModManager
                 var path = Global.ConfigJson.Configs[Global.ConfigJson.CurrentGame].Launcher;
                 try
                 {
-                    // 前回のゲームプロセスが残っているとSteamが新しい起動を無視するため、
-                    // 何度も起動し直さないとゲームが開かない原因になる
+                    // If the previous game process is still running, Steam ignores the new launch,
+                    // which is why the game sometimes needed several tries to open
                     if (IsProcessRunning(Path.GetFileNameWithoutExtension(path)))
                     {
                         Logger.WriteLine($"{Path.GetFileName(path)} is already running. Close it (check Task Manager) before launching again.", LoggerType.Warning);
@@ -1041,8 +1041,8 @@ namespace DivaModManager
                             id = "1761390";
                             break;
                     }
-                    // Steam未起動でexeを直接起動すると、steam_apiがゲームを終了させてSteam経由で再起動するため
-                    // 一度目の起動が失敗したように見える。その場合はSteam経由で起動する
+                    // Starting the exe directly while Steam is closed makes steam_api close the game and relaunch it through Steam,
+                    // so the first launch looks like it failed. In that case launch through Steam
                     var useSteam = Global.ConfigJson.Configs[Global.ConfigJson.CurrentGame].LauncherOptionIndex > 0
                         || (!Global.IsWine && !string.IsNullOrEmpty(id) && !IsProcessRunning("steam"));
                     if (useSteam && !string.IsNullOrEmpty(id))
@@ -1050,7 +1050,7 @@ namespace DivaModManager
                         path = $"steam://rungameid/{id}";
                     }
 
-                    // 起動前に、ゲームが落ちる・曲が読めない原因になる問題（エラー）だけ確認する
+                    // Before launching, check only for problems (errors) that make the game crash or a song fail to load
                     var mods = GetEnabledModsInPriority();
                     var gameDir = ModHealthScanner.GameDir;
                     var installed = GetInstalledMods();
@@ -1063,7 +1063,7 @@ namespace DivaModManager
                         Logger.WriteLine($"Couldn't save the mod configuration. Enabled mods may not be applied in game.", LoggerType.Warning);
                     }
 
-                    // セーブデータが前回から変わっていればバックアップしておく（Option タブから復元できる）
+                    // Back up the save if it changed since last time (it can be restored from the Option tab)
                     await Task.Run(SaveBackup.BackupIfChanged);
                     RefreshSaveBackupList();
 
@@ -1087,7 +1087,7 @@ namespace DivaModManager
             }
         }
 
-        /// <summary>問題があるときに「それでも起動するか」を聞く。起動するなら true</summary>
+        /// <summary>Asks whether to launch anyway when there are problems. True to launch</summary>
         private bool ConfirmLaunchWithProblems(List<HealthIssue> errors)
         {
             var lines = errors.Take(4).Select(p => $"• {p.Mod}: {p.KindText}").ToList();
@@ -1201,7 +1201,7 @@ namespace DivaModManager
             var selectedMods = ModGrid.SelectedItems.OfType<Mod>().ToList();
             if (!selectedMods.Any()) return;
 
-            // {0} = 数、{1} = 削除する Mod の名前（多いときは最初の 10 個）
+            // {0} = count, {1} = names of the mods to delete (the first 10 when there are many)
             var names = selectedMods.Take(10).Select(m => $"• {m.name}").ToList();
             if (selectedMods.Count > 10) names.Add(UiTranslator.Format("...and {0} more", selectedMods.Count - 10));
             List<string> replaceList = new() { selectedMods.Count.ToString(), string.Join("\n", names) };
@@ -1473,11 +1473,11 @@ namespace DivaModManager
         }
 
 
-        // config.toml から表示を同期している間は書き込みを行わない
+        // Don't write while the combo box is being synced from config.toml
         private bool isSyncingDMLConsoleBox = false;
 
         /// <summary>
-        /// DMLの config.toml の console 設定をコンボボックスに反映する
+        /// Shows DML's console setting from config.toml in the combo box
         /// </summary>
         private void SyncDMLConsoleBox()
         {
@@ -1487,7 +1487,7 @@ namespace DivaModManager
             isSyncingDMLConsoleBox = false;
         }
 
-        // 以前は未実装（常に無効化され、選択時はデバッグ用のメッセージを表示するだけ）だった
+        // This used to be unimplemented (always disabled, and choosing it only showed a debug message)
         private void DMLConsoleBox_SelectionChanged(object sender, RoutedEventArgs e)
         {
             if (!IsLoaded || isSyncingDMLConsoleBox || DMLConsoleBox.SelectedIndex < 0)
@@ -1881,11 +1881,11 @@ namespace DivaModManager
         }
         /// <summary>
 
-        /// Mod フォルダのプレビュー画像をメモリに読み込む。
+        /// Loads a mod folder's preview image into memory.
 
-        /// 以前は UriSource でファイルを参照していたため、WpfAnimatedGif が再描画時にファイルを読み直し、
+        /// It used to reference the file through UriSource, so WpfAnimatedGif reread the file when redrawing,
 
-        /// 表示中の Mod を削除すると「ファイルが見つからない」例外でアプリが落ちていた
+        /// and deleting the mod being shown crashed the app with a "file not found" exception
 
         /// </summary>
 
@@ -1893,7 +1893,7 @@ namespace DivaModManager
 
         {
 
-            // MemoryStream は破棄しない（GIF アニメーションの再デコードで使われるため）
+            // The MemoryStream isn't disposed (GIF animations decode from it again)
 
             var stream = new MemoryStream(File.ReadAllBytes(path));
 
@@ -2797,7 +2797,7 @@ namespace DivaModManager
                 });
             }
         }
-        /// <summary>DivaModArchive のカードの作者をクリック: その作者の Mod を表示する</summary>
+        /// <summary>Clicking the author on a DivaModArchive card shows that author's mods</summary>
         private async void DMAAuthor_Click(object sender, MouseButtonEventArgs e)
         {
             if ((sender as FrameworkElement)?.DataContext is not DivaModArchiveUser author) return;
@@ -2824,7 +2824,7 @@ namespace DivaModManager
             }
         }
 
-        /// <summary>GameBanana のカードの作者をクリック: 作者のページ（投稿一覧）を開く</summary>
+        /// <summary>Clicking the author on a GameBanana card opens their page (submissions)</summary>
         private void GBAuthor_Click(object sender, MouseButtonEventArgs e)
         {
             if ((sender as FrameworkElement)?.DataContext is not GameBananaRecord record || record.Owner == null) return;
@@ -3361,7 +3361,7 @@ namespace DivaModManager
                 return;
             }
 
-            // 並べ替えると読み込み順（上ほど優先）が変わるので確認する
+            // Sorting changes the load order (higher wins), so ask first
             var detail = header == "Priority"
                 ? UiTranslator.T("\"Priority\" is an optional label you can type in each mod (double-click the cell), for example 1, 2 or -1. Sorting puts the mods in the order of those labels; mods without a label keep their place in the middle.")
                 : UiTranslator.T("The load order changes: mods higher in the list win when they overwrite each other.");
@@ -3636,7 +3636,7 @@ namespace DivaModManager
             // Name or Note
             if (!string.IsNullOrEmpty(SearchModListTextBox.Text))
             {
-                // 曲名・曲 ID で探す（どの Mod にその曲が入っているか）
+                // Search by song name or ID (which mod has the song)
                 if (SearchTargetComboBox.SelectedIndex == 3)
                 {
                     var found = ModSongIndex.Search(Global.ModList.Select(x => x.directory_path), SearchModListTextBox.Text);
@@ -3869,7 +3869,7 @@ namespace DivaModManager
             var combo = sender as ComboBox;
             if (combo != null && combo.IsKeyboardFocusWithin)
             {
-                // 先頭は条件なし、末尾は未指定（表示は翻訳されるので位置で判定する）
+                // The first item means no filter and the last one means unspecified (the text is translated, so check the position)
                 var index = combo.SelectedIndex;
                 ModGridSearch.isCategorySearch = index <= 0 ? null : true;
                 if (ModGridSearch.isCategorySearch != null)
@@ -3908,7 +3908,7 @@ namespace DivaModManager
             var combo = sender as ComboBox;
             if (combo != null && combo.IsKeyboardFocusWithin)
             {
-                // 項目の表示は翻訳されるので順番で判定する（Enabled / True / False）
+                // The item text is translated, so check the position (Enabled / True / False)
                 bool? setEnabled = combo.SelectedIndex switch
                 {
                     1 => true,
@@ -3931,7 +3931,7 @@ namespace DivaModManager
             {
                 ModGridSearch.name = string.Empty;
                 ModGridSearch.note = string.Empty;
-                // 項目の表示は翻訳されるので順番で判定する（Name & Note / Name / Note）
+                // The item text is translated, so check the position (Name & Note / Name / Note)
                 var selectedIndex = combo.SelectedIndex;
                 ModGridSearch.name = selectedIndex switch
                 {
@@ -3957,7 +3957,7 @@ namespace DivaModManager
             var info = WindowList.MessageWindowNo(76, replaceList);
             var window = new DmmInfoWindowOK(info.Info(), info.Context(), $"[{info.WindowId()}] {info.WindowTitle()}", true) { Owner = this };
             window.Button_1.Content = info.Button_1();
-            // このバージョンのリリースノート（GitHub）を開く
+            // Open this version's release notes (GitHub)
             window.ShowLinkButton(Global.ConfigToml?.Language == "JP" ? "パッチノート" : UiTranslator.T("Patch notes"),
                 $"{DMMUpdater.RELEASES_URL}/tag/v{App.Version}");
             window.ShowDialog();
@@ -4067,7 +4067,7 @@ namespace DivaModManager
             var combo = sender as ComboBox;
             if (combo != null && combo.IsKeyboardFocusWithin)
             {
-                // 項目の表示は翻訳されるので Tag の列名で判定する（先頭の "Visible Column" は Tag なし）
+                // The item text is translated, so check the column name in Tag (the first item, "Visible Column", has no Tag)
                 if (VisibleColumnComboBox.SelectedItem is ComboBoxItem { Tag: string columnName })
                 {
                     var col = GetDataGridColumnByName(ModGrid, columnName);
@@ -4458,7 +4458,7 @@ namespace DivaModManager
             }
         }
 
-        #region 曲の一覧
+        #region Song list
 
         private async void SongListTab_Selected(object sender, RoutedEventArgs e)
         {
@@ -4466,14 +4466,14 @@ namespace DivaModManager
             await SongListControl.RefreshAsync();
         }
 
-        /// <summary>曲の一覧でダブルクリックした曲の Mod を、Mods タブで選んで表示する</summary>
+        /// <summary>Selects and shows, in the Mods tab, the mod of the song double-clicked in the song list</summary>
         private void ShowModInList(string modName)
         {
             ModManagerTab.IsSelected = true;
             var mod = Global.ModList?.FirstOrDefault(m => m.name == modName);
             if (mod == null || !ModGrid.Items.Contains(mod))
             {
-                // 検索で隠れているときは検索を解除する
+                // If a search hides it, clear the search
                 SearchModListTextBox.Text = string.Empty;
                 Global.ModList = Global.ModList_All;
                 ModGrid.ItemsSource = Global.ModList;
@@ -4486,7 +4486,7 @@ namespace DivaModManager
 
         #endregion
 
-        #region セーブデータのバックアップ・容量
+        #region Save backups and disk space
 
         private void RefreshSaveBackupList()
         {
@@ -4581,7 +4581,7 @@ namespace DivaModManager
             {
                 foreach (var entry in Directory.EnumerateFileSystemEntries(Global.downloadBaseLocation))
                 {
-                    // フォルダの目印のファイルは残す
+                    // Keep the folder's marker file
                     if (string.Equals(entry, Global.temporaryWarningFilePath, StringComparison.OrdinalIgnoreCase)) continue;
                     try
                     {

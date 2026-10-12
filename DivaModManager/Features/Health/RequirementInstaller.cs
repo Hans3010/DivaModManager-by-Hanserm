@@ -11,8 +11,8 @@ using System.Threading.Tasks;
 namespace DivaModManager.Features.Health
 {
     /// <summary>
-    /// 必要な Mod をインストールする。GameBanana / DivaModArchive の Mod は、ワンクリックインストールと同じ方法
-    /// （DivaModManager を "-download divamodmanager:..." で起動）でダウンロードする。それ以外はページを開く
+    /// Installs a required mod. GameBanana / DivaModArchive mods are downloaded the same way as one-click install
+    /// (starting DivaModManager with "-download divamodmanager:..."). Anything else opens its page
     /// </summary>
     public static class RequirementInstaller
     {
@@ -43,7 +43,7 @@ namespace DivaModManager.Features.Health
             {
                 Logger.WriteLine($"Couldn't start the download of {name}: {ex.Message}", LoggerType.Warning);
             }
-            // 自動でダウンロードできないときはページを開く
+            // Open the page when it can't be downloaded automatically
             if (!string.IsNullOrEmpty(url))
             {
                 Logger.WriteLine($"Opening the page of {name}: {url}", LoggerType.Info);
@@ -57,14 +57,14 @@ namespace DivaModManager.Features.Health
             Process.Start(new ProcessStartInfo(exe, $"-download \"{protocolLine}\"") { UseShellExecute = false, WorkingDirectory = Global.assemblyLocation });
         }
 
-        /// <summary>GameBanana の Mod のいちばん新しいファイルの ID</summary>
+        /// <summary>ID of the newest file of a GameBanana mod</summary>
         private static async Task<string> NewestGameBananaFileAsync(int modId)
         {
             using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
             client.DefaultRequestHeaders.UserAgent.ParseAdd("DivaModManager-by-Hanserm");
             using var doc = JsonDocument.Parse(await client.GetStringAsync($"https://gamebanana.com/apiv11/Mod/{modId}?_csvProperties=_aFiles"));
             if (!doc.RootElement.TryGetProperty("_aFiles", out var files) || files.ValueKind != JsonValueKind.Array) return null;
-            // "download_from_alternate_file_source" のような中身のないファイルは使わない（そのときはページを開く）
+            // Don't use empty files such as "download_from_alternate_file_source" (open the page instead)
             var newest = files.EnumerateArray()
                 .Where(f => f.TryGetProperty("_nFilesize", out var size) && size.GetInt64() > 10_000)
                 .OrderByDescending(f => f.TryGetProperty("_tsDateAdded", out var t) ? t.GetInt64() : 0)

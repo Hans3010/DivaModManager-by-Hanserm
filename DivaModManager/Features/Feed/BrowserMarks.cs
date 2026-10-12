@@ -10,9 +10,9 @@ using System.Text.Json;
 namespace DivaModManager.Features.Feed
 {
     /// <summary>
-    /// GameBanana / DivaModArchive タブの「インストール済み」表示とお気に入りを管理する。
-    /// お気に入りはカードのデータ（API の JSON）ごと favorites.json に保存するので、
-    /// お気に入り一覧でも通常のカードと同じようにダウンロードできる。
+    /// Manages the "Installed" badge and favorites in the GameBanana / DivaModArchive tabs.
+    /// Favorites store the whole card data (the API's JSON) in favorites.json,
+    /// so they can be downloaded from the favorites list like any other card.
     /// </summary>
     public static class BrowserMarks
     {
@@ -31,7 +31,7 @@ namespace DivaModManager.Features.Feed
         private static List<FavoriteEntry> favorites;
         private static string FavoritesPath => Path.Combine(Global.assemblyLocation, FAVORITES_FILE);
 
-        /// <summary>"https://gamebanana.com/mods/123/" と "gamebanana.com/mods/123" を同じものとして扱う</summary>
+        /// <summary>Treats "https://gamebanana.com/mods/123/" and "gamebanana.com/mods/123" as the same</summary>
         public static string NormalizeLink(Uri uri)
         {
             if (uri == null) return null;
@@ -40,7 +40,7 @@ namespace DivaModManager.Features.Feed
             return host + uri.AbsolutePath.TrimEnd('/').ToLowerInvariant();
         }
 
-        /// <summary>"Nitori's Song Pack" と "nitoris song pack" を同じ名前として扱う（英数字と各国の文字のみ、小文字）</summary>
+        /// <summary>Treats "Nitori's Song Pack" and "nitoris song pack" as the same name (letters and digits of any language only, lowercase)</summary>
         public static string NormalizeName(string name)
         {
             if (string.IsNullOrWhiteSpace(name)) return null;
@@ -49,9 +49,9 @@ namespace DivaModManager.Features.Feed
         }
 
         /// <summary>
-        /// インストール済み Mod の情報: mod.json に保存されたページ URL と、Mod の名前（フォルダ名・config.toml の name）。
-        /// ドラッグ＆ドロップで入れた Mod は URL がなく、同じ Mod が GameBanana と DivaModArchive の両方にある場合も
-        /// 片方の URL しかないので、名前でも照合する
+        /// Installed mod info: the page URL saved in mod.json and the mod's names (folder name and the name in config.toml).
+        /// Mods added by drag and drop have no URL, and a mod on both GameBanana and DivaModArchive
+        /// only has one of the URLs, so names are matched too
         /// </summary>
         public static (HashSet<string> Links, HashSet<string> Names) GetInstalled()
         {
@@ -113,7 +113,7 @@ namespace DivaModManager.Features.Feed
             catch (Exception ex) { Logger.WriteLine($"Couldn't save {FAVORITES_FILE}: {ex.Message}", LoggerType.Error); }
         }
 
-        /// <summary>カードにインストール済み・お気に入りの印を付ける</summary>
+        /// <summary>Marks cards as installed / favorite</summary>
         public static void Mark<T>(IEnumerable<T> items) where T : class
         {
             if (items == null) return;
@@ -143,7 +143,7 @@ namespace DivaModManager.Features.Feed
             return key != null && names.Contains(key);
         }
 
-        /// <summary>お気に入りの追加・解除を切り替える</summary>
+        /// <summary>Adds or removes a favorite</summary>
         public static void ToggleFavorite(object item)
         {
             switch (item)

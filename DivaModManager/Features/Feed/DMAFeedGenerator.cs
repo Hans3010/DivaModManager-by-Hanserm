@@ -159,7 +159,7 @@ namespace DivaModManager.Features.Feed
         }
 
         /// <summary>
-        /// 作者の Mod を集める。API は作者で絞り込めないので、作者名で検索して作者が一致する投稿だけ残す
+        /// Collects an author's mods. The API can't filter by author, so it searches the author's name and keeps the posts where the author matches
         /// </summary>
         public static async Task<ObservableCollection<DivaModArchivePost>> GetAuthorPostsAsync(DivaModArchiveUser author)
         {

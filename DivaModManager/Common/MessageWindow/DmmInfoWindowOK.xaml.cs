@@ -13,7 +13,7 @@ namespace DivaModManager.Common.MessageWindow
         public bool IsCancel = true;
         private string linkUrl;
 
-        /// <summary>2つ目のボタンでリンク（パッチノートなど）を開けるようにする</summary>
+        /// <summary>Lets a second button open a link (patch notes, etc.)</summary>
         public void ShowLinkButton(string text, string url)
         {
             linkUrl = url;

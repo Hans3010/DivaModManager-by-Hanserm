@@ -110,7 +110,7 @@ namespace DivaModManager.Misk
                 Grid.SetColumnSpan(NoButton, 2);
             }
 
-            // release.Url はリリース情報(JSON)のURLのため、そのサイズではなくアセットのサイズを表示する
+            // release.Url is the URL of the release data (JSON), so show the asset's size instead of that
             var asset = release.Assets?.FirstOrDefault();
             if (asset == null) { SizeLabel.Visibility = Visibility.Collapsed; }
             else { SizeLabel.Text = $"File Size(about) : {FileHelper.GetDirectorySizeView2(asset.Size)}"; }
@@ -161,7 +161,7 @@ namespace DivaModManager.Misk
                 Grid.SetColumnSpan(YesButton, 2);
                 Grid.SetColumnSpan(NoButton, 2);
             }
-            // 以前は Task を await せずに文字列化していたため、サイズの代わりに型名が表示されていた
+            // It used to turn the Task into a string without awaiting it, so the type name was shown instead of the size
             App.Current.Dispatcher.InvokeAsync(async () =>
             {
                 string fileSize = null;

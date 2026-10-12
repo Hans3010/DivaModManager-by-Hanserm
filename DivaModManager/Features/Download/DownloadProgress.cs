@@ -22,12 +22,12 @@ namespace DivaModManager.Features.Download
         public string FileName { get; set; }
         public double BytesPerSecond { get; set; }
         /// <summary>
-        /// 一時停止中・再接続中などの状態（通常ダウンロード中は null）
+        /// State such as paused or reconnecting (null while downloading normally)
         /// </summary>
         public string Status { get; set; }
 
         /// <summary>
-        /// プログレスウィンドウ用の表示文字列（例: "12.5% (1.2 GB of 7.5 GB) - 8.4 MB/s, 13m left"）
+        /// Text for the progress window (for example "12.5% (1.2 GB of 7.5 GB) - 8.4 MB/s, 13m left")
         /// </summary>
         public string ToDisplayText()
         {

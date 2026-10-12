@@ -10,7 +10,7 @@ using System.Windows;
 namespace DivaModManager.Features.Conflict
 {
     /// <summary>
-    /// 有効な Mod 同士の競合（ファイル・曲ID・モジュールID）と、Mod の問題（DLL・曲のファイル）を一覧表示する
+    /// Lists conflicts between enabled mods (files, song IDs, module IDs) and mod problems (DLLs, song files)
     /// </summary>
     public partial class ConflictWindow : Window
     {
@@ -22,7 +22,7 @@ namespace DivaModManager.Features.Conflict
             InitializeComponent();
             this.getEnabledMods = getEnabledMods;
             this.getInstalledMods = getInstalledMods;
-            // 列ヘッダーは共通の翻訳から除外されているので、ここで翻訳する（このウィンドウではコードが見出しを使わない）
+            // Column headers are excluded from the shared translation, so they're translated here (this window's code doesn't use the header text)
             foreach (var grid in new[] { ConflictGrid, ProblemGrid })
                 foreach (var column in grid.Columns)
                     if (column.Header is string header) column.Header = UiTranslator.T(header);
@@ -39,7 +39,7 @@ namespace DivaModManager.Features.Conflict
             var mods = getEnabledMods();
             var installed = getInstalledMods?.Invoke();
             var gameDir = ModHealthScanner.GameDir;
-            // GameBanana / DivaModArchive の「必要な Mod」を更新する（1 日 1 回）
+            // Refresh the "required mods" from GameBanana / DivaModArchive (once a day)
             using (var timeout = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(20)))
             {
                 try { await ModRequirements.RefreshAsync((installed ?? new List<ModRequirements.InstalledMod>()).Select(m => m.Homepage).Where(h => h != null), timeout.Token); }

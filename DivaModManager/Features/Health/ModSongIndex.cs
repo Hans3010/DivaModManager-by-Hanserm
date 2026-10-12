@@ -7,11 +7,11 @@ using System.Text;
 namespace DivaModManager.Features.Health
 {
     /// <summary>
-    /// 各 Mod の mod_pv_db.txt に入っている曲（ID・曲名・難易度）。曲名・ID で Mod を探す、曲の一覧を作るのに使う
+    /// Songs in each mod's mod_pv_db.txt (ID, name, difficulties). Used to find mods by song name or ID and to build the song list
     /// </summary>
     public static class ModSongIndex
     {
-        /// <param name="Difficulties">"E N H EX EXEX" のような、遊べる難易度</param>
+        /// <param name="Difficulties">Playable difficulties, such as "E N H EX EXEX"</param>
         public record Song(int Id, string Name, string NameJp, string Difficulties);
 
         private static readonly Dictionary<string, (DateTime Time, List<Song> Songs)> cache = new(StringComparer.OrdinalIgnoreCase);
@@ -63,7 +63,7 @@ namespace DivaModManager.Features.Health
                 {
                     lengths.TryGetValue((id, key), out var len);
                     if (len > 0) list.Add(label);
-                    // extreme の 2 つ目は EXTRA EXTREME
+                    // The second extreme is EXTRA EXTREME
                     if (key == "extreme" && len > 1) list.Add("EXEX");
                 }
                 return string.Join(" ", list);
@@ -75,8 +75,8 @@ namespace DivaModManager.Features.Health
         }
 
         /// <summary>
-        /// 曲名（英語・日本語）の一部、または曲 ID（"270" / "pv_270"）で探す。
-        /// 返り値: Mod のフォルダ → 一致した曲
+        /// Searches by part of the song name (English or Japanese) or by song ID ("270" / "pv_270").
+        /// Returns: mod folder → matching songs
         /// </summary>
         public static Dictionary<string, List<Song>> Search(IEnumerable<string> modDirs, string query)
         {

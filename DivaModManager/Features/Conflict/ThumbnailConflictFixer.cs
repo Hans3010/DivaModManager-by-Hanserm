@@ -7,12 +7,12 @@ using System.Text;
 namespace DivaModManager.Features.Conflict
 {
     /// <summary>
-    /// 曲選択のサムネイル競合を修正する。
-    /// 古い曲パックは公式のサムネイルスプライトセット（SPR_SEL_PVTMB, ID 4527, spr_sel_pvtmb.farc）を
-    /// 丸ごと置き換えるため、そのようなパックを2つ以上有効にすると片方のサムネイルが表示されない。
-    /// 新しいパック（Nitori's Song Pack など）と同じように、パック専用のセット
-    /// （SPR_SEL_PVTMB_xxx / spr_sel_pvtmb_xxx.farc、固有のID）へ移すことで共存できるようにする。
-    /// 変更前のファイルは .bak として残す。
+    /// Fixes song select thumbnail conflicts.
+    /// Older song packs replace the whole official thumbnail sprite set (SPR_SEL_PVTMB, ID 4527, spr_sel_pvtmb.farc),
+    /// so with two or more of those packs enabled, one pack's thumbnails don't show.
+    /// Like newer packs (Nitori's Song Pack, etc.), the pack's thumbnails are moved to their own set
+    /// (SPR_SEL_PVTMB_xxx / spr_sel_pvtmb_xxx.farc with a unique ID) so both packs work together.
+    /// The original files are kept as .bak.
     /// </summary>
     public static class ThumbnailConflictFixer
     {
@@ -25,9 +25,9 @@ namespace DivaModManager.Features.Conflict
             conflict.Type == ConflictType.File && conflict.Key.Equals(THUMB_FARC_RELATIVE, StringComparison.OrdinalIgnoreCase) && conflict.Mods.Count > 1;
 
         /// <summary>
-        /// 指定した Mod のサムネイルを専用のスプライトセットへ移す
+        /// Moves the given mod's thumbnails to their own sprite set
         /// </summary>
-        /// <returns>結果メッセージ</returns>
+        /// <returns>Result message</returns>
         public static string Fix(string modName, string modPath)
         {
             var dir2d = Path.Combine(modPath, "rom", "2d");
@@ -43,7 +43,7 @@ namespace DivaModManager.Features.Conflict
             if (File.Exists(newFarcPath))
                 throw new InvalidOperationException($"{modName}: {Path.GetFileName(newFarcPath)} already exists.");
 
-            // 1) mod_spr_db.bin: 公式セットのエントリを専用セットに書き換える（文字列は末尾に追加）
+            // 1) mod_spr_db.bin: point the official set's entry to the new set (strings are appended at the end)
             var db = File.ReadAllBytes(sprDbPath);
             var setCount = BitConverter.ToUInt32(db, 0);
             var setsOffset = BitConverter.ToUInt32(db, 4);
@@ -79,10 +79,10 @@ namespace DivaModManager.Features.Conflict
                 db = patched;
             }
 
-            // 2) FARC: 中のファイル名を変えて新しい名前で保存する
+            // 2) FARC: rename the files inside and save it under the new name
             var farc = RenameFarcEntry(File.ReadAllBytes(farcPath), OFFICIAL_FILE_NAME, newFileBase + ".bin");
 
-            // 3) バックアップを作ってから書き込む（元の spr_sel_pvtmb.farc は .bak にして読み込まれないようにする）
+            // 3) Write only after making backups (the original spr_sel_pvtmb.farc becomes .bak so it isn't loaded)
             File.Copy(sprDbPath, sprDbPath + ".bak", true);
             File.WriteAllBytes(newFarcPath, farc);
             File.Move(farcPath, farcPath + ".bak", true);
@@ -91,7 +91,7 @@ namespace DivaModManager.Features.Conflict
             return $"{modName}: thumbnails moved to their own sprite set ({newSetName}, {Path.GetFileName(newFarcPath)}). Backups: mod_spr_db.bin.bak, spr_sel_pvtmb.farc.bak";
         }
 
-        /// <summary>Fix で作ったバックアップから元に戻す</summary>
+        /// <summary>Restores the backups made by Fix</summary>
         public static bool Restore(string modPath)
         {
             var dir2d = Path.Combine(modPath, "rom", "2d");
@@ -117,7 +117,7 @@ namespace DivaModManager.Features.Conflict
             return "DMM" + (initials.Length > 0 ? initials : "MOD");
         }
 
-        /// <summary>他の Mod と重ならないよう、名前から決まった値の ID を作る（FNV-1a）</summary>
+        /// <summary>Makes an ID derived from the name so it doesn't collide with other mods (FNV-1a)</summary>
         private static uint MakeSetId(string name)
         {
             uint hash = 2166136261;
@@ -167,7 +167,7 @@ namespace DivaModManager.Features.Conflict
         }
 
         /// <summary>
-        /// FARC (FArc / FArC) のエントリ名を変更して作り直す。データ部分はそのままコピーする
+        /// Rebuilds a FARC (FArc / FArC) with renamed entries. The data is copied as is
         /// </summary>
         private static byte[] RenameFarcEntry(byte[] b, string oldName, string newName)
         {
@@ -211,7 +211,7 @@ namespace DivaModManager.Features.Conflict
             {
                 WriteString(ms, e.Name);
                 offsetPositions.Add(ms.Position);
-                WriteUInt32BE(ms, 0); // offset (後で書く)
+                WriteUInt32BE(ms, 0); // offset (written later)
                 WriteUInt32BE(ms, (uint)e.Data.Length);
                 if (compressed) WriteUInt32BE(ms, e.OriginalSize);
             }

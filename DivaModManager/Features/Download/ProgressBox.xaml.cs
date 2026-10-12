@@ -21,7 +21,7 @@ namespace DivaModManager
         }
 
         /// <summary>
-        /// 一時停止ボタンを表示し、ダウンロードに渡す PauseToken を返す
+        /// Shows the pause button and returns the PauseToken passed to the download
         /// </summary>
         public PauseToken EnablePause()
         {

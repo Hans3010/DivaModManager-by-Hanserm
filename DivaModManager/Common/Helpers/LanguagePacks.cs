@@ -9,9 +9,9 @@ using Tomlyn.Model;
 namespace DivaModManager.Common.Helpers
 {
     /// <summary>
-    /// 追加の表示言語（Languages フォルダ）を読み込む。英語と日本語は組み込み。
-    /// Languages\&lt;code&gt;\ に language.toml / ui.toml / messages.toml を置くと、言語の選択肢に追加される。
-    /// "_" で始まるフォルダ（_template など）は読み込まない。詳しくは TRANSLATING.md を参照。
+    /// Loads extra display languages (Languages folder). English and Japanese are built in.
+    /// Putting language.toml / ui.toml / messages.toml in Languages\&lt;code&gt;\ adds the language to the choices.
+    /// Folders starting with "_" (such as _template) aren't loaded. See TRANSLATING.md for details.
     /// </summary>
     public static class LanguagePacks
     {
@@ -28,7 +28,7 @@ namespace DivaModManager.Common.Helpers
 
         private static readonly Dictionary<string, Pack> packs = new(StringComparer.OrdinalIgnoreCase);
 
-        /// <summary>選択肢: 組み込みの英語・日本語と、Languages フォルダの言語</summary>
+        /// <summary>Choices: built-in English and Japanese, plus the languages in the Languages folder</summary>
         public static IReadOnlyList<(string Code, string Name)> Available =>
             new List<(string, string)> { ("EN", "English"), ("JP", "日本語 (Japanese)") }
                 .Concat(packs.Values.OrderBy(p => p.Name).Select(p => (p.Code, p.Name)))
@@ -39,7 +39,7 @@ namespace DivaModManager.Common.Helpers
 
         public static Pack Get(string code) => code != null && packs.TryGetValue(code, out var pack) ? pack : null;
 
-        /// <summary>メッセージウィンドウの文言（ない場合は null → 英語を使う）</summary>
+        /// <summary>Text of a message window (null if missing, so English is used)</summary>
         public static string Message(string code, int windowId, string field)
         {
             var pack = Get(code);

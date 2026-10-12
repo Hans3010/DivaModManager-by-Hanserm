@@ -121,7 +121,7 @@ namespace DivaModManager.Common.MessageWindow
             if (numList.Count > 0)
                 numMax = numList.ToList().Max(x => x) + 1;
             else
-                // 置き換える {0} がなくても "none"（空欄の印）は消す
+                // Remove "none" (the marker for an empty field) even when there's no {0} to replace
                 return regex.Replace(message, "");
             for (var n = 0; n < numMax; n++)
             {
@@ -258,7 +258,7 @@ namespace DivaModManager.Common.MessageWindow
         public string Info_JP { get; set; }
         [DataMember(Name = "info_en")]
         public string Info_EN { get; set; }
-        /// <summary>設定言語の文言を選ぶ。英語・日本語以外は Languages フォルダの messages.toml、ない場合は英語</summary>
+        /// <summary>Picks the text in the configured language. Languages other than English and Japanese use messages.toml in the Languages folder, falling back to English</summary>
         private string Pick(string field, string jp, string en)
         {
             var lang = Global.ConfigToml?.Language;

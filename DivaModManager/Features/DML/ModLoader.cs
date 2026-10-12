@@ -24,7 +24,7 @@ namespace DivaModManager.Features.DML
         }
 
         /// <summary>
-        /// config.toml の console 設定を取得する（読み込めない場合は null）
+        /// Gets the console setting from config.toml (null if it can't be read)
         /// </summary>
         public static bool? ReadConsoleEnabled()
         {
@@ -44,7 +44,7 @@ namespace DivaModManager.Features.DML
         }
 
         /// <summary>
-        /// config.toml の console 設定を変更する（他の設定は保持する）
+        /// Changes the console setting in config.toml (other settings are kept)
         /// </summary>
         public static bool WriteConsoleEnabled(bool enabled)
         {
@@ -88,8 +88,8 @@ namespace DivaModManager.Features.DML
                 Logger.WriteLine($"BuildAsync Unable to find {CONFIG_TOML_PATH} id:{Environment.CurrentManagedThreadId}", LoggerType.Debug);
                 return false;
             }
-            // 以前の実装はリトライ判定が逆転しており、一時的なロック後に読み込みが成功しても
-            // false を返して config.toml が更新されない（Modが反映されない）ことがあった
+            // The previous implementation had the retry check inverted: even when reading succeeded after a brief lock,
+            // it returned false and config.toml wasn't updated (mods weren't applied)
             string configString = null;
             for (var retryCnt = 0; retryCnt < MAX_RETRY; retryCnt++)
             {
@@ -134,8 +134,8 @@ namespace DivaModManager.Features.DML
             foreach (var mod in Global.ConfigJson.Configs[Global.ConfigJson.CurrentGame].Loadouts[Global.ConfigJson.Configs[Global.ConfigJson.CurrentGame].CurrentLoadout].Where(x => x.enabled).ToList())
                 priorityList.Add(mod.name);
             config["priority"] = priorityList.ToArray();
-            // 以前の実装は書き込み成功後も毎回500ms待機し、IOExceptionが続くと無限ループになっていた
-            // （一時ファイル＋Moveは MMPWatcherTOML の Renamed を発火させるため使用しない）
+            // The previous implementation waited 500 ms after every successful write, and looped forever on repeated IOExceptions
+            // (a temp file + Move isn't used because it fires MMPWatcherTOML's Renamed event)
             var isReady = false;
             var tomlText = Toml.FromModel(config);
             for (var retryCnt = 0; retryCnt < MAX_RETRY && !isReady; retryCnt++)

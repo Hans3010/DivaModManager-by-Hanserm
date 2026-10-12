@@ -497,7 +497,7 @@ namespace DivaModManager.Features.Download
                     progressBox.finished = true;
                     progressBox.Close();
                 }
-                // 不完全なファイルを残さない（キャンセル時と同様）
+                // Don't leave an incomplete file behind (same as when cancelled)
                 if (!string.IsNullOrEmpty(ret) && File.Exists(ret))
                     FileHelper.DeleteFile(ret);
                 MessageBox.Show($"Error whilst downloading {fileName}. {e.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);

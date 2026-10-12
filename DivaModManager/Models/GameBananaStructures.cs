@@ -188,7 +188,7 @@ namespace DivaModManager
     }
     public class GameBananaRecord : ExtractInfo, System.ComponentModel.INotifyPropertyChanged
     {
-        // ブラウザ表示用: インストール済みか、お気に入りか（API のデータではない）
+        // For the browser: whether it's installed or a favorite (not part of the API data)
         private bool _isInstalled;
         [JsonIgnore]
         public bool IsInstalled

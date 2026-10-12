@@ -19,7 +19,7 @@ namespace DivaModManager.Features.Extract
         public bool finished = false;
 
         /// <summary>
-        /// ユーザーがウィンドウを閉じた（＝解凍をキャンセルした）ときにキャンセルされる
+        /// Cancelled when the user closes the window (= cancels the extraction)
         /// </summary>
         public CancellationToken CancelToken => cancellationTokenSource.Token;
 
@@ -27,7 +27,7 @@ namespace DivaModManager.Features.Extract
         {
             InitializeComponent();
             cancellationTokenSource = new();
-            // 以前は progressBar = new() で XAML のプログレスバーを未表示の新規インスタンスに置き換えていたため、進捗が表示されなかった
+            // It used to replace the XAML progress bar with a new, hidden instance (progressBar = new()), so no progress was shown
             extractinfo.ProgressValue = start;
             extractinfo.ProgressMaxValue = end;
             progressBar.Minimum = start;
@@ -36,7 +36,7 @@ namespace DivaModManager.Features.Extract
         }
 
         /// <summary>
-        /// 進捗を更新する（UIスレッドから呼び出すこと）
+        /// Updates the progress (call from the UI thread)
         /// </summary>
         public void SetProgress(double percent, string fileName)
         {
@@ -50,7 +50,7 @@ namespace DivaModManager.Features.Extract
         }
 
         /// <summary>
-        /// 進捗率が取得できない間はアニメーション表示にする
+        /// Shows an animation while the percentage isn't known
         /// </summary>
         public void SetIndeterminate(string fileName)
         {
@@ -61,7 +61,7 @@ namespace DivaModManager.Features.Extract
         }
 
         /// <summary>
-        /// 処理完了時に呼び出す（キャンセル扱いにせずに閉じる）
+        /// Call when finished (closes without counting as cancelled)
         /// </summary>
         public void CloseFinished()
         {

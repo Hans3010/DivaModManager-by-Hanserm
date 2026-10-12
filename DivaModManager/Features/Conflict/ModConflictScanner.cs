@@ -19,11 +19,11 @@ namespace DivaModManager.Features.Conflict
     public class ModConflict
     {
         public ConflictType Type { get; set; }
-        /// <summary>重複しているもの（ファイルパス、pv_xxx、モジュールIDなど）</summary>
+        /// <summary>What is duplicated (file path, pv_xxx, module ID, etc.)</summary>
         public string Key { get; set; }
-        /// <summary>曲名・モジュール名など（分かる場合）</summary>
+        /// <summary>Song name, module name, etc. (when known)</summary>
         public string Detail { get; set; }
-        /// <summary>重複している Mod（優先度順。先頭が実際に使われる）</summary>
+        /// <summary>The mods that have it (in priority order; the first one is the one actually used)</summary>
         public List<string> Mods { get; set; } = new();
 
         public string TypeText => UiTranslator.T(Type switch
@@ -41,20 +41,20 @@ namespace DivaModManager.Features.Conflict
     }
 
     /// <summary>
-    /// 有効な Mod 同士の競合を検出する。
-    /// DML は同じパスのファイルが複数の Mod にある場合、優先度が一番高い Mod のものだけを読み込む。
-    /// mod_pv_db.txt などの "mod_" で始まるデータベースは結合されるが、同じ ID の曲・モジュールは上書きされる。
+    /// Finds conflicts between enabled mods.
+    /// When several mods have a file at the same path, DML only loads the one from the highest-priority mod.
+    /// Databases starting with "mod_" such as mod_pv_db.txt are merged, but songs and modules with the same ID overwrite each other.
     /// </summary>
     public static class ModConflictScanner
     {
         private const string MODULE_TABLE = "gm_module_id.bin";
         private const string ITEM_TABLE = "gm_customize_item_id.bin";
 
-        // Mod の DLL が各 Mod フォルダから個別に読み込むファイル（DML の上書きではないので全部使われる）
-        // rom/nc_db.toml: New Classics が "%s/rom/nc_db.toml" として Mod ごとに読み込む
+        // Files that a mod's DLL reads from each mod folder separately (not DML's override, so all of them are used)
+        // rom/nc_db.toml: New Classics reads it from every mod as "%s/rom/nc_db.toml"
         private static readonly HashSet<string> PerModFiles = new(StringComparer.OrdinalIgnoreCase) { "rom/nc_db.toml" };
 
-        /// <param name="mods">有効な Mod（名前とフォルダ）を優先度の高い順に渡す</param>
+        /// <param name="mods">Enabled mods (name and folder), highest priority first</param>
         public static List<ModConflict> Scan(IReadOnlyList<(string Name, string Path)> mods)
         {
             var result = new List<ModConflict>();
@@ -65,7 +65,7 @@ namespace DivaModManager.Features.Conflict
             var costumes = new Dictionary<string, (List<string> Mods, string Name)>(StringComparer.OrdinalIgnoreCase);
             var items = new Dictionary<int, (List<string> Mods, string Name)>();
 
-            // ThumbnailSplitter があれば、パックごとのサムネイル（spr_sel_pvtmb.farc）の重複は自動で分けられる
+            // With ThumbnailSplitter, duplicated per-pack thumbnails (spr_sel_pvtmb.farc) are split automatically
             var hasSplitter = mods.Any(m => Health.ModHealthScanner.IsThumbnailSplitter(m.Name, m.Path));
 
             foreach (var (name, path) in mods)
@@ -76,11 +76,11 @@ namespace DivaModManager.Features.Conflict
                 {
                     var relative = Path.GetRelativePath(path, file).Replace('\\', '/');
                     var fileName = Path.GetFileName(relative);
-                    // "mod_" で始まるファイルは DML が結合するので競合しない（中身の ID は別途確認する）
+                    // Files starting with "mod_" are merged by DML, so they don't conflict (their IDs are checked separately)
                     if (fileName.StartsWith("mod_", StringComparison.OrdinalIgnoreCase)) continue;
-                    // ほかの Mod の DLL が Mod フォルダごとに読み込むファイルも競合しない
+                    // Files another mod's DLL reads per mod folder don't conflict either
                     if (PerModFiles.Contains(relative)) continue;
-                    // バックアップ（.bak。Fix thumbnails などで作られる）はゲームが読み込まないので競合しない
+                    // Backups (.bak, created by Fix thumbnails, etc.) aren't loaded by the game, so they don't conflict
                     if (relative.EndsWith(".bak", StringComparison.OrdinalIgnoreCase)) continue;
                     if (hasSplitter && relative.Equals("rom/2d/spr_sel_pvtmb.farc", StringComparison.OrdinalIgnoreCase)) continue;
                     AddUnique(files, relative, name);
@@ -138,7 +138,7 @@ namespace DivaModManager.Features.Conflict
             if (!list.Contains(mod)) list.Add(mod);
         }
 
-        /// <summary>DML が読み込む rom 系フォルダ（rom, rom_steam, rom_steam_en など）内のファイル</summary>
+        /// <summary>Files in the rom folders DML loads (rom, rom_steam, rom_steam_en, etc.)</summary>
         private static IEnumerable<string> EnumerateRomFiles(string modPath)
         {
             IEnumerable<string> romDirs;
@@ -175,8 +175,8 @@ namespace DivaModManager.Features.Conflict
         }
 
         /// <summary>
-        /// Mod 内のモジュール・カスタマイズアイテムのテーブルを読み込む。
-        /// 単体ファイル（rom\...\gm_module_id.bin）と FARC（rom\mod_gm_module_tbl.farc など）の両方に対応する
+        /// Reads a mod's module and customize item tables.
+        /// Supports both loose files (rom\...\gm_module_id.bin) and FARCs (rom\mod_gm_module_tbl.farc, etc.)
         /// </summary>
         public static IEnumerable<(string FileName, string Source, string Text)> ReadTables(string modPath)
         {
@@ -200,7 +200,7 @@ namespace DivaModManager.Features.Conflict
             }
         }
 
-        /// <summary>"module.0.id=997" 形式のテーブルを番号ごとの辞書にする</summary>
+        /// <summary>Turns a "module.0.id=997" style table into one dictionary per number</summary>
         private static IEnumerable<Dictionary<string, string>> ParseTable(string text, string prefix)
         {
             var entries = new SortedDictionary<int, Dictionary<string, string>>();

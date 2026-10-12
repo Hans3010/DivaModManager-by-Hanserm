@@ -12,15 +12,15 @@ using System.Threading.Tasks;
 
 namespace DivaModManager.Features.Health
 {
-    /// <summary>ほかの Mod に必要な Mod（名前とページの URL）</summary>
+    /// <summary>A mod required by another mod (name and page URL)</summary>
     public record Requirement(string Name, string Url, bool Optional);
 
     /// <summary>
-    /// Mod が必要とする Mod を調べる。
-    /// - GameBanana: ページの「Requirements」と、説明文の "requires ..." の近くにある GameBanana のリンク
-    /// - DivaModArchive: 投稿の dependencies
-    /// - ファイルから分かるもの: rom/nc_db.toml → New Classics、lyrics/*.toml → LyricsPatch
-    /// サイトの情報は cache/requirements.json に 1 日保存し、起動前の確認ではネットに接続しない。
+    /// Finds the mods a mod needs.
+    /// - GameBanana: the page's "Requirements" and GameBanana links near "requires ..." in the description
+    /// - DivaModArchive: the post's dependencies
+    /// - What the files show: rom/nc_db.toml → New Classics, lyrics/*.toml → LyricsPatch
+    /// Site data is cached in cache/requirements.json for a day, so the check before launching doesn't go online.
     /// </summary>
     public static class ModRequirements
     {
@@ -41,7 +41,7 @@ namespace DivaModManager.Features.Health
 
         #region mod.json
 
-        /// <summary>mod.json の homepage（GameBanana / DivaModArchive のページ）</summary>
+        /// <summary>The homepage in mod.json (GameBanana / DivaModArchive page)</summary>
         public static string ReadHomepage(string modPath)
         {
             try
@@ -66,7 +66,7 @@ namespace DivaModManager.Features.Health
 
         #endregion
 
-        #region キャッシュ
+        #region Cache
 
         private static void LoadCache()
         {
@@ -90,7 +90,7 @@ namespace DivaModManager.Features.Health
             catch (Exception) { }
         }
 
-        /// <summary>保存してある必要 Mod（ネットには接続しない）</summary>
+        /// <summary>Cached required mods (doesn't go online)</summary>
         public static List<Requirement> GetCached(string homepage)
         {
             var (site, id) = ParseUrl(homepage);
@@ -102,7 +102,7 @@ namespace DivaModManager.Features.Health
             }
         }
 
-        /// <summary>古くなった・まだない Mod のページの情報を取得して保存する</summary>
+        /// <summary>Fetches and saves the page data for mods that are outdated or not cached yet</summary>
         public static async Task RefreshAsync(IEnumerable<string> homepages, CancellationToken token = default)
         {
             var targets = new List<(string Site, int Id)>();
@@ -149,7 +149,7 @@ namespace DivaModManager.Features.Health
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            // ページの「Requirements」欄: [ [名前, URL, ...], ... ]
+            // The page's "Requirements" field: [ [name, URL, ...], ... ]
             if (root.TryGetProperty("_aRequirements", out var reqs) && reqs.ValueKind == JsonValueKind.Array)
             {
                 foreach (var r in reqs.EnumerateArray())
@@ -161,7 +161,7 @@ namespace DivaModManager.Features.Health
                 }
             }
 
-            // 説明文の「Requirements: ... の Mod を入れてください」に書かれたリンク
+            // Links in the description, as in "Requirements: please install the ... mod"
             if (root.TryGetProperty("_sText", out var textProp) && textProp.ValueKind == JsonValueKind.String)
             {
                 var text = textProp.GetString() ?? "";
@@ -212,7 +212,7 @@ namespace DivaModManager.Features.Health
 
         #endregion
 
-        #region インストール済みか
+        #region Installed check
 
         public class InstalledMod
         {
@@ -226,15 +226,15 @@ namespace DivaModManager.Features.Health
         private static string Normalize(string s) =>
             Regex.Replace(Regex.Replace(s ?? "", @"\(.*?\)|\[.*?\]", ""), @"[^a-z0-9]", "", RegexOptions.IgnoreCase).ToLowerInvariant();
 
-        /// <summary>必要な Mod の名前が DLL の名前と同じか（例: "OpenLyricLimit (Optional)" と OpenLyricLimit.dll）</summary>
+        /// <summary>Whether the required mod's name matches a DLL name (for example "OpenLyricLimit (Optional)" and OpenLyricLimit.dll)</summary>
         public static bool MatchesDll(Requirement r, string dll) =>
             Normalize(System.IO.Path.GetFileNameWithoutExtension(dll)) is { Length: >= 4 } d && d == Normalize(r.Name);
 
-        /// <summary>DivaModLoader（Mod ではなくゲームのフォルダに入るもの）は確認しない</summary>
+        /// <summary>DivaModLoader (it goes in the game folder, not in mods) isn't checked</summary>
         public static bool IsModLoader(Requirement r) =>
             Regex.IsMatch(r.Name + " " + r.Url, @"diva\s*mod\s*loader|DivaModLoader", RegexOptions.IgnoreCase);
 
-        /// <summary>必要な Mod を、インストール済みの Mod から探す（なければ null）</summary>
+        /// <summary>Finds a required mod among the installed mods (null if missing)</summary>
         public static InstalledMod FindInstalled(Requirement r, IEnumerable<InstalledMod> mods)
         {
             var (site, id) = ParseUrl(r.Url);

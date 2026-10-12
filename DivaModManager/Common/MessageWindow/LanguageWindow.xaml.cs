@@ -6,7 +6,7 @@ using System.Windows.Controls;
 namespace DivaModManager.Common.MessageWindow
 {
     /// <summary>
-    /// 初回起動時の表示言語の選択（以前は日本語/英語の2ボタンのメッセージウィンドウだった）
+    /// Display language choice on first launch (it used to be a message window with two buttons, Japanese / English)
     /// </summary>
     public partial class LanguageWindow : Window
     {

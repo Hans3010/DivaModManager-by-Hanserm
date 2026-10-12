@@ -28,11 +28,11 @@ namespace DivaModManager.Features.Songs
     }
 
     /// <summary>
-    /// インストール済みの Mod が追加する曲の一覧（曲名・ID で検索、どの Mod の曲か、同じ ID で上書きされているか）
+    /// List of the songs installed mods add (search by name or ID, which mod each song is from, and whether another mod with the same ID replaces it)
     /// </summary>
     public partial class SongListTab : UserControl
     {
-        /// <summary>曲をダブルクリックしたとき、その Mod を Mods タブで表示する（MainWindow が処理する）</summary>
+        /// <summary>When a song is double-clicked, shows its mod in the Mods tab (handled by MainWindow)</summary>
         public static event Action<string> ShowModRequested;
 
         private List<SongRow> rows = new();
@@ -41,18 +41,18 @@ namespace DivaModManager.Features.Songs
         public SongListTab()
         {
             InitializeComponent();
-            // 列ヘッダーは共通の翻訳から除外されているので、ここで翻訳する
+            // Column headers are excluded from the shared translation, so they're translated here
             foreach (var column in SongGrid.Columns)
                 if (column.Header is string header) column.Header = UiTranslator.T(header);
         }
 
-        /// <summary>Mod の一覧から曲を読み直す（タブを開いたときに呼ぶ）</summary>
+        /// <summary>Reloads the songs from the mod list (called when the tab is opened)</summary>
         public async Task RefreshAsync()
         {
             if (loading) return;
             loading = true;
             CountText.Text = UiTranslator.T("Loading songs...");
-            // Mod リストの順番 = 読み込みの優先度（上ほど優先）
+            // Order of the mod list = load priority (higher wins)
             var mods = (Global.ModList_All ?? new()).Select(m => (Name: m.name, Path: m.directory_path, Enabled: m.enabled)).ToList();
             rows = await Task.Run(() => Build(mods));
 
@@ -69,7 +69,7 @@ namespace DivaModManager.Features.Songs
         private static List<SongRow> Build(List<(string Name, string Path, bool Enabled)> mods)
         {
             var result = new List<SongRow>();
-            // 有効な Mod のうち、その ID を最初に持つ Mod が使われる
+            // Among enabled mods, the first one that has the ID is used
             var winner = new Dictionary<int, string>();
             foreach (var (name, path, enabled) in mods)
             {

@@ -33,16 +33,16 @@ namespace DivaModManager.Common.Helpers
         }
         private const int DownloadBufferSize = 81920;
         private const int MaxDownloadRetries = 5;
-        // この秒数データが届かなければ接続が止まったとみなして再接続する
+        // If no data arrives for this many seconds, the connection is considered stalled and is reopened
         private static readonly TimeSpan StallTimeout = TimeSpan.FromSeconds(60);
         private static readonly TimeSpan ProgressInterval = TimeSpan.FromMilliseconds(250);
 
         // Download function Core
-        // 以前の実装の問題点:
-        //  - HTTPエラー(404/503等)のレスポンス本文をそのままModファイルとして保存していた
-        //  - 本文の読み込み中にはタイムアウトが無く、接続が止まると永遠に終わらなかった
-        //  - 途中で切断されても再試行せず、サイズ不一致の警告後に壊れたファイルを展開していた
-        // 現在は Range ヘッダで途中から再開し、失敗時は例外を投げて展開させない
+        // Problems with the previous implementation:
+        //  - It saved the body of HTTP error responses (404/503, etc.) as the mod file
+        //  - Reading the body had no timeout, so a stalled connection never finished
+        //  - It didn't retry after a disconnect, and extracted the broken file after a size mismatch warning
+        // Now it resumes with a Range header and throws on failure so nothing gets extracted
         public static async Task DownloadAsync(this HttpClient client, string requestUri, Stream destination, string fileName,
             IProgress<DownloadProgress> progress = null, CancellationToken cancellationToken = default, PauseToken pause = default)
         {
@@ -60,7 +60,7 @@ namespace DivaModManager.Common.Helpers
                 catch (Exception ex) when (IsRetryable(ex, cancellationToken)
                     && (retry < MaxDownloadRetries || destination.Length > lengthBeforeAttempt))
                 {
-                    // 大きいファイルでは何度も切断されることがあるため、進捗があれば回数をリセットする
+                    // Big files can disconnect many times, so the retry count is reset whenever there's progress
                     if (destination.Length > lengthBeforeAttempt)
                         retry = 0;
                     retry++;
@@ -85,9 +85,9 @@ namespace DivaModManager.Common.Helpers
         }
 
         /// <summary>
-        /// 1回分のダウンロード。destination に既にデータがあれば Range で続きから取得する
+        /// One download attempt. If destination already has data, the rest is requested with Range
         /// </summary>
-        /// <param name="total">ファイル全体のサイズ（不明なら null）。失敗時も判明したサイズを保持する</param>
+        /// <param name="total">Size of the whole file (null if unknown). Keeps the size it found even when the attempt fails</param>
         private static async Task DownloadAttemptAsync(HttpClient client, string requestUri, Stream destination, string fileName,
             IProgress<DownloadProgress> progress, CancellationToken cancellationToken, PauseToken pause, StrongBox<long?> total)
         {
@@ -98,7 +98,7 @@ namespace DivaModManager.Common.Helpers
 
             using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             if (resumeFrom > 0 && response.StatusCode == HttpStatusCode.RequestedRangeNotSatisfiable && total.Value == resumeFrom)
-                return; // 既に全て取得済み
+                return; // Already fully downloaded
             response.EnsureSuccessStatusCode();
 
             long? totalLength;
@@ -110,7 +110,7 @@ namespace DivaModManager.Common.Helpers
             }
             else
             {
-                // サーバーが Range に未対応の場合は最初からやり直す
+                // If the server doesn't support Range, start over from the beginning
                 if (resumeFrom > 0)
                 {
                     Logger.WriteLine($"Server does not support resuming {fileName}. Restarting download from the beginning.", LoggerType.Warning);
@@ -133,7 +133,7 @@ namespace DivaModManager.Common.Helpers
                 {
                     progress?.Report(new DownloadProgress(
                         totalLength > 0 ? (float)destination.Length / totalLength.Value : 0, destination.Length, totalLength ?? 0, fileName, status: "Paused"));
-                    // 長時間の一時停止中にサーバーが接続を切った場合は、再試行処理で続きから再開される
+                    // If the server closes the connection during a long pause, the retry resumes where it stopped
                     await pause.WaitWhilePausedAsync(cancellationToken);
                     speedWatch.Restart();
                     speedBytes = 0;
@@ -173,7 +173,7 @@ namespace DivaModManager.Common.Helpers
                 }
             }
 
-            // 接続が途中で閉じられた場合は再試行させる
+            // Retry if the connection is closed partway through
             if (totalLength.HasValue && destination.Length < totalLength.Value)
                 throw new IOException($"Connection closed before the download finished ({destination.Length} of {totalLength} bytes).");
         }
@@ -184,12 +184,12 @@ namespace DivaModManager.Common.Helpers
                 return false;
             if (ex is HttpRequestException httpEx && httpEx.StatusCode.HasValue)
             {
-                // 404/403 等は再試行しても無駄なので即座に失敗させる
+                // 404/403 and similar won't succeed on retry, so fail right away
                 var code = (int)httpEx.StatusCode.Value;
                 return code == 408 || code == 429 || code >= 500;
             }
             return ex is HttpRequestException || ex is IOException || ex is TimeoutException
-                || ex is TaskCanceledException; // HttpClient.Timeout（ヘッダ受信待ち）
+                || ex is TaskCanceledException; // HttpClient.Timeout (waiting for the headers)
         }
     }
     public static class StreamExtensions

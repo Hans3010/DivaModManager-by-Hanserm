@@ -27,7 +27,7 @@ namespace DivaModManager.Common.ExtendToml
                 }
                 else
                 {
-                    // 英語・スペイン語は英語のコメント
+                    // English and Spanish use the English comments
                     commentAttr = prop.GetCustomAttribute<DataMemberCommentEN>();
                 }
                 var dataAttr = prop.GetCustomAttribute<DataMemberAttribute>();
@@ -79,7 +79,7 @@ namespace DivaModManager.Common.ExtendToml
                 }
                 else
                 {
-                    // 英語・スペイン語は英語のコメント
+                    // English and Spanish use the English comments
                     commentAttr = prop.GetCustomAttribute<DataMemberCommentEN>();
                 }
                 var dataAttr = prop.GetCustomAttribute<DataMemberAttribute>();

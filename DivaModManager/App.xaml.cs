@@ -344,7 +344,7 @@ namespace DivaModManager
         {
             if (Global.ConfigToml.LanguageDialog)
             {
-                // 英語・日本語・スペイン語から選べるドロップダウン（既定は英語）
+                // Drop-down to choose English, Japanese or Spanish (English by default)
                 var languageWindow = new Common.MessageWindow.LanguageWindow(Global.ConfigToml.Language);
                 if (languageWindow.ShowDialog() != true)
                     Environment.Exit(0);

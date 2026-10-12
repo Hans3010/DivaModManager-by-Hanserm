@@ -302,7 +302,7 @@ namespace DivaModManager.Common.Helpers
             MessageBoxResult ret;
             if (Application.Current?.MainWindow is MainWindow)
             {
-                // メイン画面の表示後は、ほかのメッセージと同じ見た目のウィンドウで表示する
+                // Once the main window is shown, use the same window style as the other messages
                 ret = Application.Current.Dispatcher.Invoke(() => StyledMessageBox(info, type));
             }
             else if (window == null)

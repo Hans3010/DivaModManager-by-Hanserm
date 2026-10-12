@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 namespace DivaModManager.Features.Download
 {
     /// <summary>
-    /// ダウンロードの一時停止/再開を制御する
+    /// Controls pausing and resuming a download
     /// </summary>
     public class PauseTokenSource
     {

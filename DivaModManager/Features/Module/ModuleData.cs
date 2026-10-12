@@ -70,8 +70,8 @@ namespace DivaModManager.Features.Module
             bool ret = false;
             Clear();
 
-            // Mod の場合: 単体ファイルに加え、FARC（rom\mod_gm_module_tbl.farc など）内のテーブルも読み込む
-            // （以前は単体ファイルのみを探していたため、FARC で配布される一般的な Mod は表示されなかった）
+            // For mods: besides loose files, also read the tables inside FARCs (rom\mod_gm_module_tbl.farc, etc.)
+            // (it used to look only for loose files, so the usual mods distributed in FARCs weren't shown)
             if (!string.IsNullOrEmpty(targetModPath))
             {
                 foreach (var table in Conflict.ModConflictScanner.ReadTables(targetModPath))
@@ -147,7 +147,7 @@ namespace DivaModManager.Features.Module
         }
 
         /// <summary>
-        /// モジュール・カスタマイズアイテムのテーブル（テキスト）を読み込む
+        /// Reads module and customize item tables (text)
         /// </summary>
         private bool LoadText(int loadPriority, string text, string modFolderPath, string relativePath)
         {

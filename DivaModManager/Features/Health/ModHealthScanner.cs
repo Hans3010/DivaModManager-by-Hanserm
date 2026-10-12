@@ -20,15 +20,15 @@ namespace DivaModManager.Features.Health
     {
         public HealthSeverity Severity { get; set; }
         public string Mod { get; set; }
-        /// <summary>英語の種類名（表示は SeverityText / KindText で翻訳）</summary>
+        /// <summary>Problem kind in English (shown translated through SeverityText / KindText)</summary>
         public string Kind { get; set; }
         public string Detail { get; set; }
-        /// <summary>必要な Mod のページ（あれば「インストール」ボタンで使う）</summary>
+        /// <summary>Page of the required mod (used by the Install button, if any)</summary>
         public string InstallUrl { get; set; }
         public string InstallName { get; set; }
-        /// <summary>何についての問題か（曲 ID・DLL 名など）。無視リストのキーに使う（表示言語が変わっても同じ）</summary>
+        /// <summary>What the problem is about (song ID, DLL name, etc.). Used as the key in the ignore list (stays the same when the language changes)</summary>
         public string Subject { get; set; }
-        /// <summary>ユーザーが「無視」にした問題（数えない・起動前に聞かない）</summary>
+        /// <summary>A problem the user ignored (not counted, not asked about before launching)</summary>
         public bool Ignored { get; set; }
         public string Key => $"{Mod}|{Kind}|{Subject}";
 
@@ -42,16 +42,16 @@ namespace DivaModManager.Features.Health
     }
 
     /// <summary>
-    /// 有効な Mod のうち、ゲームで問題になりそうなものを探す。
-    /// - Mod の DLL が見つからない、または DLL が必要とするライブラリが見つからない（DivaModLoader の "Failed to load"）
-    /// - mod_pv_db の曲が使う譜面・音声・動画ファイルがどの Mod にもない
-    /// - 歌詞が 150 行を超えるのに OpenLyricLimit がない
+    /// Looks for things in the enabled mods that are likely to cause problems in game.
+    /// - A mod's DLL is missing, or a library the DLL needs can't be found (DivaModLoader's "Failed to load")
+    /// - Charts, audio or videos used by songs in mod_pv_db aren't in any mod
+    /// - Lyrics have more than 150 lines but OpenLyricLimit isn't installed
     /// </summary>
     public static class ModHealthScanner
     {
         private const int LYRIC_LIMIT = 150;
 
-        /// <summary>ゲームのフォルダ（DivaMegaMix.exe のあるフォルダ）</summary>
+        /// <summary>The game folder (where DivaMegaMix.exe is)</summary>
         public static string GameDir
         {
             get
@@ -61,13 +61,13 @@ namespace DivaModManager.Features.Health
             }
         }
 
-        /// <param name="installed">インストール済みのすべての Mod（無効のものも）。必要な Mod の確認に使う。null なら有効な Mod だけ</param>
+        /// <param name="installed">Every installed mod (including disabled ones), used to check required mods. If null, only the enabled mods</param>
         public static List<HealthIssue> Scan(IReadOnlyList<(string Name, string Path)> mods, string gameDir, IReadOnlyList<ModRequirements.InstalledMod> installed = null)
         {
             var issues = new List<HealthIssue>();
             var valid = mods.Where(m => !string.IsNullOrEmpty(m.Path) && Directory.Exists(m.Path)).ToList();
 
-            // すべての有効な Mod のファイル（"rom/..." の相対パス）。DML はこれらをゲームのファイルとして読み込む
+            // Files of every enabled mod (paths relative to the mod, "rom/..."). DML loads these as game files
             var modFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var (_, path) in valid)
             {
@@ -97,7 +97,7 @@ namespace DivaModManager.Features.Health
                     CheckSongs(name, pvDb, gameDir, modFiles, hasLyricLimitPatch, issues);
             }
 
-            // ThumbnailSplitter は一番上（優先度が最も高い）に置く必要がある（作者の説明）
+            // ThumbnailSplitter has to be at the top (highest priority), as its author says
             var splitter = valid.FindIndex(m => IsThumbnailSplitter(m.Name, m.Path));
             if (splitter > 0)
             {
@@ -115,14 +115,14 @@ namespace DivaModManager.Features.Health
             return issues;
         }
 
-        /// <summary>ThumbnailSplitter（パック同士のサムネイルの競合を自動で解決する Mod）か</summary>
+        /// <summary>Whether this is ThumbnailSplitter (a mod that resolves thumbnail conflicts between packs automatically)</summary>
         public static bool IsThumbnailSplitter(string name, string path) =>
             (name ?? "").Replace(" ", "").Contains("ThumbnailSplitter", StringComparison.OrdinalIgnoreCase)
             || (!string.IsNullOrEmpty(path) && File.Exists(Path.Combine(path, "ThumbnailSplitter.dll")));
 
-        #region 必要な Mod
+        #region Required mods
 
-        /// <summary>インストール済みの Mod の一覧（必要な Mod の確認用）</summary>
+        /// <summary>List of installed mods (to check required mods)</summary>
         public static List<ModRequirements.InstalledMod> DescribeInstalled(IEnumerable<(string Name, string Path, bool Enabled)> mods) =>
             mods.Where(m => !string.IsNullOrEmpty(m.Path) && Directory.Exists(m.Path))
                 .Select(m => new ModRequirements.InstalledMod { Name = m.Name, Path = m.Path, Enabled = m.Enabled, Homepage = ModRequirements.ReadHomepage(m.Path), DllNames = ReadDllList(m.Path) })
@@ -131,7 +131,7 @@ namespace DivaModManager.Features.Health
         private static void CheckRequirements(string mod, string modPath, IReadOnlyList<ModRequirements.InstalledMod> installed, List<HealthIssue> issues)
         {
             var requirements = new List<Requirement>(ModRequirements.GetCached(ModRequirements.ReadHomepage(modPath)));
-            // ファイルから分かる必要 Mod
+            // Required mods that the files show
             if (File.Exists(Path.Combine(modPath, "rom", "nc_db.toml"))) requirements.Add(ModRequirements.NewClassics);
             var lyrics = Path.Combine(modPath, "lyrics");
             if (Directory.Exists(lyrics) && Directory.EnumerateFiles(lyrics, "*.toml").Any()) requirements.Add(ModRequirements.LyricsPatch);
@@ -142,7 +142,7 @@ namespace DivaModManager.Features.Health
             foreach (var req in requirements)
             {
                 if (ModRequirements.IsModLoader(req) || !seen.Add(req.Url + "|" + req.Name)) continue;
-                // その Mod 自身が必要なものを含んでいる（例: Spanish Lyrics に入っている OpenLyricLimit）
+                // The mod already includes what it needs (for example OpenLyricLimit inside Spanish Lyrics)
                 if (self != null && self.DllNames.Any(d => ModRequirements.MatchesDll(req, d))) continue;
                 var found = ModRequirements.FindInstalled(req, others);
                 if (found == null)
@@ -212,8 +212,8 @@ namespace DivaModManager.Features.Health
                 catch (Exception) { continue; }
 
                 var searchDirs = new List<string> { Path.GetDirectoryName(dllPath), modPath, gameDir, Environment.SystemDirectory, Environment.GetFolderPath(Environment.SpecialFolder.Windows) };
-                // PATH は見ない: ゲームは Steam から起動するので、DMM と同じ PATH になるとは限らない
-                // （MSYS2 などの PATH にだけあるライブラリは、ゲームでは見つからず "Failed to load" になる）
+                // PATH isn't checked: the game is started from Steam, so it doesn't necessarily get the same PATH as DMM
+                // (libraries that are only in a PATH such as MSYS2's aren't found by the game, which shows "Failed to load")
                 var missing = imports
                     .Where(i => !IsApiSet(i) && !loadedDllNames.Contains(i))
                     .Where(i => !searchDirs.Any(d => SafeExists(d, i)))
@@ -243,7 +243,7 @@ namespace DivaModManager.Features.Health
 
         #endregion
 
-        #region 曲
+        #region Songs
 
         private static void CheckSongs(string mod, string pvDbPath, string gameDir, HashSet<string> modFiles, bool hasLyricLimitPatch, List<HealthIssue> issues)
         {
@@ -301,7 +301,7 @@ namespace DivaModManager.Features.Health
             foreach (var (id, m) in missingBySong.OrderBy(x => int.TryParse(x.Key, out var n) ? n : 0))
             {
                 var song = $"pv_{id} {SongName(id)}".Trim();
-                // ほかの難易度の譜面はあって、音声もある → その難易度だけ選べない（曲は遊べる）
+                // Other difficulties' charts and the audio exist → only that difficulty can't be chosen (the song is playable)
                 if (m.Audio.Count == 0 && m.Charts.Count > 0 && presentCharts.ContainsKey(id))
                 {
                     issues.Add(new HealthIssue
@@ -358,8 +358,8 @@ namespace DivaModManager.Features.Health
         }
 
         /// <summary>
-        /// 使われていない難易度・別音源（length より後ろの番号）は無視する。
-        /// 例: difficulty.hard.length=0 なら difficulty.hard.0.script_file_name は読み込まれない
+        /// Unused difficulties and alternate audio (numbers past their length) are ignored.
+        /// Example: with difficulty.hard.length=0, difficulty.hard.0.script_file_name isn't loaded
         /// </summary>
         private static bool IsActiveEntry(Dictionary<string, string> kv, string id, string rest)
         {
@@ -376,16 +376,16 @@ namespace DivaModManager.Features.Health
         private static bool FileExists(string file, string gameDir, HashSet<string> modFiles)
         {
             if (modFiles.Contains(file)) return true;
-            // 公式の曲などはゲーム本体のアーカイブにあるので、ここで確認できるのはフォルダにあるファイルだけ
+            // Official songs and similar are in the game's own archives, so only files in folders can be checked here
             if (!string.IsNullOrEmpty(gameDir) && SafeExists(gameDir, file)) return true;
-            // PC 版は pv_db に .mp4 と書かれていても同じ名前の .usm を読み込む
+            // The PC version loads the .usm with the same name even when pv_db says .mp4
             if (file.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase) && modFiles.Contains(file[..^4] + ".usm")) return true;
-            // ゲーム本体の曲（ID が公式の範囲）のファイルは本体にあるので確認しない
+            // Files of the game's own songs (IDs in the official range) are in the game itself, so they aren't checked
             if (IsOfficialAsset(file)) return true;
             return false;
         }
 
-        /// <summary>公式曲のファイル（pv_001～pv_999 など、本体のアーカイブにあるもの）</summary>
+        /// <summary>Files of official songs (pv_001 to pv_999, etc., which are in the game's archives)</summary>
         private static bool IsOfficialAsset(string file)
         {
             var name = Path.GetFileNameWithoutExtension(file);

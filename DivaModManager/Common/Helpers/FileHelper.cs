@@ -82,10 +82,10 @@ namespace DivaModManager.Common.Helpers
                     var fullPath = Path.GetFullPath(deleteFilePath);
                     Logger.WriteLine($"DeleteFile: File info for '{deleteFilePath}': fullPath='{fullPath}', Attributes={info.Attributes}, LinkTarget={info.LinkTarget ?? "null"}", LoggerType.Debug);
 
-                    // 解凍用の一時フォルダ(temp_)内はインストール済みModのコピーなので、ごみ箱に送らず直接削除する
-                    // （数千ファイル・数GBがごみ箱に溜まり、1ファイルずつの処理で非常に遅くなっていた）
-                    // DMM がダウンロードしたアーカイブ（DMM\Downloads 直下）もインストール後は不要なので直接削除する
-                    // （ごみ箱は C ドライブにあるため、曲パックをダウンロードするたびに数GBずつ溜まっていた）
+                    // Files in the temporary extraction folders (temp_) are copies of installed mods, so they're deleted directly instead of going to the Recycle Bin
+                    // (thousands of files / several GB piled up in the Recycle Bin, and moving them one by one was very slow)
+                    // Archives DMM downloaded (directly under DMM\Downloads) aren't needed after installing either, so they're deleted directly
+                    // (the Recycle Bin is on drive C, so every song pack download left several GB there)
                     if (IsInExtractTempDirectory(fullPath) || IsDownloadedArchive(fullPath))
                     {
                         System.IO.File.SetAttributes(deleteFilePath, FileAttributes.Normal);
@@ -393,7 +393,7 @@ namespace DivaModManager.Common.Helpers
         /// <param name="targetPath">チェック対象パス</param>
         /// <returns></returns>
         /// <summary>
-        /// DMM/Downloads/temp_xxx（解凍用の一時フォルダ）配下か
+        /// Whether the path is under DMM/Downloads/temp_xxx (temporary extraction folder)
         /// </summary>
         public static bool IsInExtractTempDirectory(string fullPath)
         {
@@ -402,8 +402,8 @@ namespace DivaModManager.Common.Helpers
         }
 
         /// <summary>
-        /// DMM がダウンロードしたアーカイブ（DMM/Downloads 直下の zip / 7z / rar）か
-        /// ドラッグ＆ドロップで追加した元ファイルは DMM/Downloads にないので対象外
+        /// Whether the file is an archive DMM downloaded (zip / 7z / rar directly under DMM/Downloads)
+        /// Original files added by drag and drop aren't in DMM/Downloads, so they're excluded
         /// </summary>
         public static bool IsDownloadedArchive(string fullPath)
         {
@@ -510,9 +510,9 @@ namespace DivaModManager.Common.Helpers
                 Path.GetFullPath(Path.Combine(Global.temporaryLocationDML, "temp_")));
 
             // 削除判定の順番は重要なので注意(上位のフォルダほどチェックは後に！)
-            // 以前は次の行が "else if" ではなく "if" だったため、temp_ ディレクトリの判定が
-            // 後続の checkDownloadFileResult で NOT に上書きされ、解凍用の一時フォルダが一切削除されなかった
-            // temp_ 内のファイルは従来どおり Downloads 配下のファイル(DOWNLOAD_MOD_FILE)として扱う
+            // The next line used to be "if" instead of "else if", so the temp_ folder result
+            // was overwritten with NOT by the following checkDownloadFileResult and temporary extraction folders were never deleted
+            // Files inside temp_ are still treated as files under Downloads (DOWNLOAD_MOD_FILE)
             if (checkTmpDirectoryResult)
                 ret = Directory.Exists(targetFullPath) ? DIVA_PATH_RESULT.TEMP_DIRECTORY
                     : File.Exists(targetFullPath) ? DIVA_PATH_RESULT.DOWNLOAD_MOD_FILE : DIVA_PATH_RESULT.NOT;
@@ -1535,7 +1535,7 @@ namespace DivaModManager.Common.Helpers
                     var fullPath = Path.GetFullPath(path);
                     Logger.WriteLine($"DeleteDirectoryRecursiveSafe: Directory info for '{path}': fullPath='{fullPath}', Attributes={info.Attributes}, LinkTarget={info.LinkTarget ?? "null"}", LoggerType.Debug);
 
-                    // アーカイブ由来で読み取り専用属性が付いたフォルダは、そのままでは削除できない（Access denied）
+                    // Folders that got the read-only attribute from an archive can't be deleted as they are (Access denied)
                     if ((info.Attributes & FileAttributes.ReadOnly) != 0)
                         info.Attributes &= ~FileAttributes.ReadOnly;
                     Directory.Delete(path);

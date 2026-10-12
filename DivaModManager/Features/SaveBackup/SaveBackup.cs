@@ -9,8 +9,8 @@ using System.Linq;
 namespace DivaModManager.Features.Saves
 {
     /// <summary>
-    /// Mega Mix+ のセーブデータ（%APPDATA%\SEGA\Project DIVA MEGA39's）を zip で保存・復元する。
-    /// ゲームを起動するたびに、前回のバックアップから変わっていれば新しく保存する。
+    /// Backs up and restores the Mega Mix+ save data (%APPDATA%\SEGA\Project DIVA MEGA39's) as zip files.
+    /// Every time the game is launched, a new backup is made if the save changed since the last one.
     /// </summary>
     public static class SaveBackup
     {
@@ -36,7 +36,7 @@ namespace DivaModManager.Features.Saves
                 .ToList();
         }
 
-        /// <summary>セーブデータが前回のバックアップより新しければ保存する。保存したら true</summary>
+        /// <summary>Backs up the save if it's newer than the last backup. True if a backup was made</summary>
         public static bool BackupIfChanged()
         {
             try
@@ -69,8 +69,8 @@ namespace DivaModManager.Features.Saves
         }
 
         /// <summary>
-        /// バックアップを復元する。先に今のセーブデータもバックアップしておく（restore_ で始まる名前）。
-        /// ゲームが起動していないことを呼び出し側で確認すること
+        /// Restores a backup. The current save is backed up first (name starting with save_before_restore).
+        /// The caller must make sure the game isn't running
         /// </summary>
         public static void Restore(Entry entry)
         {
@@ -81,7 +81,7 @@ namespace DivaModManager.Features.Saves
             Logger.WriteLine($"Save data restored from {entry.Path}", LoggerType.Info);
         }
 
-        /// <summary>古いバックアップを消して KEEP 個だけ残す</summary>
+        /// <summary>Deletes old backups and keeps only KEEP of them</summary>
         private static void Prune()
         {
             foreach (var old in List().Skip(KEEP))

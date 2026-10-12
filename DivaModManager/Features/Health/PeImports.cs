@@ -6,7 +6,7 @@ using System.Text;
 namespace DivaModManager.Features.Health
 {
     /// <summary>
-    /// DLL（PE ファイル）のインポートテーブルから、読み込みに必要な DLL の名前を取り出す
+    /// Gets the names of the DLLs a DLL (PE file) needs to load, from its import table
     /// </summary>
     public static class PeImports
     {
@@ -22,7 +22,7 @@ namespace DivaModManager.Features.Health
             int optionalSize = BitConverter.ToUInt16(data, pe + 20);
             int optional = pe + 24;
             ushort magic = BitConverter.ToUInt16(data, optional);
-            // データディレクトリの位置: PE32 は 96、PE32+ (64bit) は 112。インポートは 2 番目（1）
+            // Data directory offset: 96 for PE32, 112 for PE32+ (64-bit). Imports are the second entry (1)
             int dataDirs = optional + (magic == 0x20B ? 112 : 96);
             if (dataDirs + 16 > data.Length) return result;
             uint importRva = BitConverter.ToUInt32(data, dataDirs + 8);
@@ -45,7 +45,7 @@ namespace DivaModManager.Features.Health
 
             int desc = RvaToOffset(importRva);
             if (desc < 0) return result;
-            // IMAGE_IMPORT_DESCRIPTOR は 20 バイト。全部 0 で終わり
+            // IMAGE_IMPORT_DESCRIPTOR is 20 bytes. The list ends with one that is all zeros
             for (; desc + 20 <= data.Length; desc += 20)
             {
                 uint nameRva = BitConverter.ToUInt32(data, desc + 12);
