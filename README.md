@@ -27,9 +27,7 @@ One window for everything that can go wrong with your enabled mods:
 
 ![Check mods](docs/screenshots/check-mods.jpg)
 
-**Launch** checks for errors first and asks before starting the game:
-
-![Check before launching](docs/screenshots/launch-check.jpg)
+**Launch** checks for errors first and asks before starting the game.
 
 ### Song tab
 
