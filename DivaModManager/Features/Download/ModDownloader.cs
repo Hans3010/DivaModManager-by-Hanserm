@@ -445,20 +445,18 @@ namespace DivaModManager.Features.Download
                 // Create the downloads folder if necessary
                 if (!Directory.Exists(Global.downloadBaseLocation))
                     Directory.CreateDirectory(Global.downloadBaseLocation);
-                // Download the file if it doesn't already exist
                 ret = Path.Combine(Global.downloadBaseLocation, fileName);
-                if (File.Exists(ret))
+                // An unfinished download of the same URL is continued; anything else at this path is replaced
+                FileStream fs;
+                try
                 {
-                    try
-                    {
-                        FileHelper.DeleteFile(ret);
-                    }
-                    catch (Exception e)
-                    {
-                        MessageBox.Show($"Couldn't delete the already existing {Global.assemblyLocation}/Downloads/{fileName} ({e.Message})",
-                            "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        return ret;
-                    }
+                    (fs, _) = ResumableDownload.Open(ret, uri);
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show($"Couldn't delete the already existing {Global.assemblyLocation}/Downloads/{fileName} ({e.Message})",
+                        "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return ret;
                 }
                 progressBox = new ProgressBox(cancellationToken);
                 progressBox.progressBar.Value = 0;
@@ -467,8 +465,7 @@ namespace DivaModManager.Features.Download
                 progressBox.Show();
                 progressBox.Activate();
                 // Write and download the file
-                using (var fs = new FileStream(
-                    Path.Combine(Global.assemblyLocation, "Downloads", fileName), FileMode.Create, FileAccess.Write, FileShare.None))
+                using (fs)
                 {
                     client = new HttpClient()
                     {
@@ -476,13 +473,16 @@ namespace DivaModManager.Features.Download
                     };
                     await client.DownloadAsync(uri, fs, fileName, progress, cancellationToken.Token, progressBox.EnablePause());
                 }
+                ResumableDownload.Complete(ret);
                 progressBox.Close();
                 Logger.WriteLine(string.Join(" ", MeInfo, $"HttpClient.DownloadAsync Complete."), LoggerType.Debug, param: ParamInfo);
             }
             catch (OperationCanceledException)
             {
-                // Remove the file is it will be a partially downloaded one and close up
-                FileHelper.DeleteFile(ret);
+                // Cancelled by the user: remove the partial file. If the manager is closing, keep it so the
+                // download can continue the next time
+                if (Application.Current?.Dispatcher?.HasShutdownStarted != true)
+                    ResumableDownload.Discard(ret);
                 if (progressBox != null)
                 {
                     progressBox.finished = true;
@@ -497,10 +497,14 @@ namespace DivaModManager.Features.Download
                     progressBox.finished = true;
                     progressBox.Close();
                 }
-                // Don't leave an incomplete file behind (same as when cancelled)
-                if (!string.IsNullOrEmpty(ret) && File.Exists(ret))
-                    FileHelper.DeleteFile(ret);
-                MessageBox.Show($"Error whilst downloading {fileName}. {e.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                // Keep what was downloaded so downloading it again continues from there; a file that
+                // turned out wrong (size mismatch) or empty is removed
+                var keep = !string.IsNullOrEmpty(ret) && File.Exists(ret) && new FileInfo(ret).Length > 0
+                    && !(e is IOException && e.Message.StartsWith("The downloaded file is incomplete"));
+                if (!keep && !string.IsNullOrEmpty(ret))
+                    ResumableDownload.Discard(ret);
+                MessageBox.Show($"Error whilst downloading {fileName}. {e.Message}" + (keep ? "\n\nDownload it again to continue where it stopped." : ""),
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 cancelled = true;
             }
             Logger.WriteLine(string.Join(" ", MeInfo, $"End.", $"Return:{ret}"), LoggerType.Debug, param: ParamInfo);

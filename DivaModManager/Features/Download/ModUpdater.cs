@@ -429,12 +429,13 @@ namespace DivaModManager.Features.Download
                     progressBox.Activate();
                     // Write and download the file
                     var filePath = Path.Combine(Global.assemblyLocation, "Downloads", fileName);
-                    using (var fs = new FileStream(
-                        filePath, FileMode.Create, FileAccess.Write, FileShare.None))
+                    var (fs, _) = ResumableDownload.Open(filePath, uri);
+                    using (fs)
                     {
                         var client = new HttpClient() { Timeout = TimeSpan.FromSeconds(Global.ConfigToml.GameBananaApiTimeoutSec) };
                         await client.DownloadAsync(uri, fs, fileName, progress, cancellationToken.Token, progressBox.EnablePause());
                     }
+                    ResumableDownload.Complete(filePath);
                     progressBox.Close();
 
                     item.Site = ExtractInfo.SITE.GAMEBANANA_API;
@@ -506,12 +507,13 @@ namespace DivaModManager.Features.Download
                     progressBox.Show();
                     progressBox.Activate();
                     // Write and download the file
-                    using (var fs = new FileStream(
-                        Path.Combine(Global.assemblyLocation, "Downloads", fileName), FileMode.Create, FileAccess.Write, FileShare.None))
+                    var (fs, _) = ResumableDownload.Open(Path.Combine(Global.assemblyLocation, "Downloads", fileName), uri);
+                    using (fs)
                     {
                         var client = new HttpClient() { Timeout = TimeSpan.FromSeconds(Global.ConfigToml.DivaModArchiveApiTimeoutSec) };
                         await client.DownloadAsync(uri, fs, fileName, progress, cancellationToken.Token, progressBox.EnablePause());
                     }
+                    ResumableDownload.Complete(Path.Combine(Global.assemblyLocation, "Downloads", fileName));
                     progressBox.Close();
 
                     item.Site = ExtractInfo.SITE.DIVAMODARCHIVE_API;

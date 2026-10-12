@@ -325,6 +325,9 @@ namespace DivaModManager
             await App.Current.Dispatcher.InvokeAsync(() => OnFirstOpenAsync());
             // Back up the save if it changed, so there's a backup from the very first launch
             _ = Task.Run(SaveBackup.BackupIfChanged);
+            // Downloads cut off last time (the manager was closed or crashed) can be continued
+            foreach (var (file, size) in ResumableDownload.FindUnfinished())
+                Logger.WriteLine($"Unfinished download: {file} ({FileHelper.GetDirectorySizeView10(size)} so far). Download the same mod again to continue where it stopped.", LoggerType.Warning);
             if (!Global.IsWine && Global.ConfigToml.DivaModManagerUpdateCheck)
             {
                 Logger.WriteLine("Checking for DivaModManager by Hanserm update...", LoggerType.Info);
