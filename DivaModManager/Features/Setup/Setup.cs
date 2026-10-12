@@ -125,7 +125,7 @@ namespace DivaModManager.Features.Setup
                     var path = Path.Combine(library, "steamapps", "common", "Hatsune Miku Project DIVA Mega Mix Plus", exe);
                     if (File.Exists(path))
                     {
-                        Logger.WriteLine($"Found {exe} in Steam library: {path}", LoggerType.Info);
+                        Logger.WriteLine($"Found {exe} in Steam library: {path}", LoggerType.Debug);
                         return Path.GetFullPath(path);
                     }
                 }

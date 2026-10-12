@@ -157,3 +157,8 @@
 "Clean image cache" = "Limpiar caché"
 "Delete the cached GameBanana / DivaModArchive images. They are downloaded again when needed." = "Borra las imágenes guardadas de GameBanana / DivaModArchive. Se vuelven a descargar cuando hacen falta."
 "Song name or ID" = "Canción (nombre o ID)"
+"File" = "Archivo"
+"Song ID" = "ID de canción"
+"Module ID" = "ID de módulo"
+"Costume slot" = "Traje"
+"Item ID" = "ID de accesorio"

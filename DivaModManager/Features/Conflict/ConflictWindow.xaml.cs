@@ -20,6 +20,10 @@ namespace DivaModManager.Features.Conflict
         {
             InitializeComponent();
             this.getEnabledMods = getEnabledMods;
+            // 列ヘッダーは共通の翻訳から除外されているので、ここで翻訳する（このウィンドウではコードが見出しを使わない）
+            foreach (var grid in new[] { ConflictGrid, ProblemGrid })
+                foreach (var column in grid.Columns)
+                    if (column.Header is string header) column.Header = UiTranslator.T(header);
             Loaded += async (_, _) => await ScanAsync();
         }
 

@@ -321,6 +321,8 @@ namespace DivaModManager
             Logger.WriteLine(string.Join(" ", MeInfo, $"Start."), LoggerType.Debug, param: ParamInfo);
 
             await App.Current.Dispatcher.InvokeAsync(() => OnFirstOpenAsync());
+            // 最初の起動でもバックアップがあるように、セーブデータが変わっていれば保存しておく
+            _ = Task.Run(SaveBackup.BackupIfChanged);
             if (!Global.IsWine && Global.ConfigToml.DivaModManagerUpdateCheck)
             {
                 Logger.WriteLine("Checking for DivaModManager by Hanserm update...", LoggerType.Info);
