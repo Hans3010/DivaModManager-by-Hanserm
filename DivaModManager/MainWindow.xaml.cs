@@ -2811,7 +2811,8 @@ namespace DivaModManager
                 DMAFavoritesCheckBox.IsChecked = false;
                 DMAFeedBox.ItemsSource = posts;
                 DMAPage.Text = UiTranslator.Format("Mods by {0} ({1})", author.DisplayName ?? author.Name, posts.Count);
-                Logger.WriteLine($"DivaModArchive: {posts.Count} mods by {author.Name}. Search or change page to go back.", LoggerType.Info);
+                SetDMAAuthorMode(true);
+                Logger.WriteLine($"DivaModArchive: {posts.Count} mods by {author.Name}.", LoggerType.Info);
             }
             catch (Exception ex)
             {
@@ -2824,14 +2825,32 @@ namespace DivaModManager
             }
         }
 
+        /// <summary>While an author's mods are listed, the page buttons are replaced by "Back to the list"</summary>
+        private void SetDMAAuthorMode(bool on)
+        {
+            DMAAuthorBackButton.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+            var pages = on ? Visibility.Collapsed : Visibility.Visible;
+            DMAPageLeft.Visibility = pages;
+            DMAPageRight.Visibility = pages;
+            DMAPageBox.Visibility = pages;
+        }
+
+        private void DMAAuthorBack_Click(object sender, RoutedEventArgs e)
+        {
+            SetDMAAuthorMode(false);
+            DMARefreshFilterAsync();
+        }
+
         /// <summary>Clicking the author on a GameBanana card opens their page (submissions)</summary>
         private void GBAuthor_Click(object sender, MouseButtonEventArgs e)
         {
             if ((sender as FrameworkElement)?.DataContext is not GameBananaRecord record || record.Owner == null) return;
             e.Handled = true;
-            var url = record.Owner.ProfileUrl != null
-                ? record.Owner.ProfileUrl.ToString().TrimEnd('/') + "/submissions"
-                : $"https://gamebanana.com/search?_sSearchString={Uri.EscapeDataString(record.Owner.Name ?? "")}";
+            // The profile URL ends with the member ID; their mods are at members/submissions/mods/{id}
+            var id = record.Owner.ProfileUrl?.Segments.LastOrDefault()?.Trim('/');
+            var url = !string.IsNullOrEmpty(id) && id.All(char.IsDigit)
+                ? $"https://gamebanana.com/members/submissions/mods/{id}"
+                : record.Owner.ProfileUrl?.ToString() ?? $"https://gamebanana.com/search?_sSearchString={Uri.EscapeDataString(record.Owner.Name ?? "")}";
             ProcessHelper.TryStartProcess(url);
         }
 
@@ -2843,6 +2862,8 @@ namespace DivaModManager
             IsEnabledControls(false, isEnableTabs: true);
             await Dispatcher.InvokeAsync(async () =>
             {
+                // Any normal refresh (search, filters, pages) leaves the author view
+                SetDMAAuthorMode(false);
                 DMAErrorPanel.Visibility = Visibility.Collapsed;
                 DMALoadPanel.Visibility = Visibility.Visible;
                 DMAFeedBox.Visibility = Visibility.Collapsed;

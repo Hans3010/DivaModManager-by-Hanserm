@@ -1463,6 +1463,8 @@
                     </DockPanel>
 
                     <StackPanel x:Name="DMAControlPanelBottomCenter" Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="2" Grid.ColumnSpan="4" VerticalAlignment="Center">
+                        <!-- Shown while an author's mods are listed: goes back to the normal list -->
+                        <Button Name="DMAAuthorBackButton" Content="← Back to the list" Visibility="Collapsed" Click="DMAAuthorBack_Click" Margin="10,0,10,0" Padding="12,0" FontSize="18" Height="35" FontFamily="{StaticResource DmmFont}" Background="#181818" BorderBrush="#454545" Foreground="#f2f2f2"/>
                         <Button IsEnabled="False" FontFamily="{StaticResource DmmFont}" Name="DMAPageLeft" Click="DMADecrementPage" Content="&lt;" HorizontalAlignment="Right" Margin="10,0,10,0" FontSize="18" Height="35" Width="35" Background="#181818" BorderBrush="#252525" Foreground="#f2f2f2"/>
                         <TextBlock Name="DMAPage" Text="Page 1" Foreground="#f2f2f2" VerticalAlignment="Center" HorizontalAlignment="Center" FontFamily="{StaticResource DmmFont}" FontSize="18" />
                         <Button Grid.Column="3" IsEnabled="False" FontFamily="{StaticResource DmmFont}" Name="DMAPageRight" Click="DMAIncrementPage" Content=">" HorizontalAlignment="Left" Margin="10,0,10,0" FontSize="18" Height="35" Width="35" Background="#181818" BorderBrush="#252525" Foreground="#f2f2f2"/>

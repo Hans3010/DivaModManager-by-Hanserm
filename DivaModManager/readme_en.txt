@@ -1,5 +1,5 @@
 
-DivaModManager by Hanserm v1.4.0
+DivaModManager by Hanserm v1.4.1
 
 ## Report a bug
 
@@ -10,6 +10,15 @@ DivaModManager by Hanserm v1.4.0
 * Based on DivaModManager by Enomoto (https://github.com/enomoto-r02/DivaModManager-by-Enomoto)
 * Originally created by TekkaGB (DivaModManager)
 * Licensed under GPL-3.0
+
+## New in v1.4.1
+
+* Check mods: also lists problems (mod DLLs that won't load, missing charts/audio/videos, songs over 150 lyric lines) and mods that need another mod you don't have, with an Install button. Problems you can't fix can be ignored.
+* Launch checks for errors first and asks before starting the game.
+* Song tab: every song your mods add, with ID, mod, difficulties and whether another mod replaces it.
+* Option tab: automatic save data backups (restore any of the last 15) and disk usage with buttons to clean downloads and the image cache.
+* Mod browsers: click an author to see their mods (DivaModArchive, with a button to go back) or open their page (GameBanana).
+* Finds the game in any Steam library; the delete confirmation lists the mods; ThumbnailSplitter and New Classics are taken into account; many small fixes.
 
 ## Changes in this fork
 
