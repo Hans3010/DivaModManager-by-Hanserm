@@ -52,12 +52,11 @@ namespace DivaModManager.Models
             var ret = await metadataManager.InitMetadataAsync(this);
 
             var homepage = metadataManager.metadata?.homepage;
-            if (homepage != null && !string.IsNullOrEmpty(homepage.ToString()) && !string.IsNullOrWhiteSpace(homepage.DnsSafeHost.ToString()))
-                // Compare the host ("gamebanana.com"), not the whole page URL, which never matched
-                _site = Metadata.HOSTS.FirstOrDefault(x => homepage.DnsSafeHost.Equals(x.Value, StringComparison.OrdinalIgnoreCase)
-                    || homepage.DnsSafeHost.EndsWith("." + x.Value, StringComparison.OrdinalIgnoreCase)).Key ?? "-";
-            else
-                _site = "-";
+            // Mods without mod.json (installed by hand) sometimes link their page in config.toml ("Game Banana Page: ...")
+            // or were found by name on GameBanana / DivaModArchive (ModSourceLookup, cached)
+            _pageFromConfig = homepage == null ? FindPageInConfig() ?? Features.Health.ModSourceLookup.Get(name) : null;
+            homepage ??= _pageFromConfig;
+            _site = SiteOf(homepage);
 
             _SkipFileWhenSizeCheckPathList.AddRange(new[]
             {
@@ -169,9 +168,44 @@ namespace DivaModManager.Models
                 OnPropertyChanged();
             }
         }
-        /// <summary>Page the mod was downloaded from (mod.json homepage), shown as a link in the Site column</summary>
+        /// <summary>Page the mod was downloaded from (mod.json homepage, or a link in config.toml), shown as a link in the Site column</summary>
         [JsonIgnore]
-        public Uri? homepage => metadataManager?.metadata?.homepage;
+        public Uri? homepage => metadataManager?.metadata?.homepage ?? _pageFromConfig;
+        [JsonIgnore]
+        private Uri? _pageFromConfig;
+
+        /// <summary>"GB" / "DMA" for a page URL, "-" if unknown</summary>
+        private static string SiteOf(Uri? page)
+        {
+            if (page == null || string.IsNullOrWhiteSpace(page.DnsSafeHost)) return "-";
+            // Compare the host ("gamebanana.com"), not the whole page URL, which never matched
+            return Metadata.HOSTS.FirstOrDefault(x => page.DnsSafeHost.Equals(x.Value, StringComparison.OrdinalIgnoreCase)
+                || page.DnsSafeHost.EndsWith("." + x.Value, StringComparison.OrdinalIgnoreCase)).Key ?? "-";
+        }
+
+        /// <summary>Uses a page found by name for a mod that had none (updates the Site column)</summary>
+        public void UseFoundPage(Uri page)
+        {
+            if (homepage != null || page == null) return;
+            _pageFromConfig = page;
+            _site = SiteOf(page);
+            OnPropertyChanged(nameof(site));
+            OnPropertyChanged(nameof(homepage));
+        }
+
+        /// <summary>First GameBanana / DivaModArchive mod page mentioned in config.toml (null if none)</summary>
+        private Uri? FindPageInConfig()
+        {
+            try
+            {
+                var config = Path.Combine(Global.ModsFolder, name, "config.toml");
+                if (!File.Exists(config)) return null;
+                var m = System.Text.RegularExpressions.Regex.Match(File.ReadAllText(config),
+                    @"https?://(?:www\.)?(?:gamebanana\.com/mods/\d+|divamodarchive\.com/posts?/\d+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                return m.Success ? new Uri(m.Value) : null;
+            }
+            catch (Exception) { return null; }
+        }
         [JsonIgnore]
         public virtual string? category
         {

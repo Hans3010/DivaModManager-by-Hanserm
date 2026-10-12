@@ -354,6 +354,8 @@ namespace DivaModManager
             });
 
             Logger.WriteLine($"DivaModManager by Hanserm v{App.Version}{App.TestVersion} Loaded!", LoggerType.Info);
+            // Look up by name the pages of mods installed by hand, for the Site column (once; results are cached)
+            _ = FindModSourcesAsync();
 
             // セットアップが完了していない場合は次のステップを表示
             if (string.IsNullOrEmpty(Global.ConfigJson.Configs[Global.ConfigJson.CurrentGame].Launcher))
@@ -1086,6 +1088,24 @@ namespace DivaModManager
             else
             {
                 Logger.WriteLine($"Please click Setup before launching!", LoggerType.Warning);
+            }
+        }
+
+        /// <summary>Finds the GameBanana / DivaModArchive page of mods without one, by exact name</summary>
+        private async Task FindModSourcesAsync()
+        {
+            try
+            {
+                var unknown = (Global.ModList_All ?? new()).Where(m => m.homepage == null).ToList();
+                if (unknown.Count == 0) return;
+                var found = await ModSourceLookup.RefreshAsync(unknown.Select(m => m.name));
+                foreach (var mod in unknown)
+                    mod.UseFoundPage(ModSourceLookup.Get(mod.name));
+                if (found > 0) Logger.WriteLine($"Found the page of {found} mods installed by hand (Site column).", LoggerType.Info);
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLine($"Couldn't look up mod pages: {ex.Message}", LoggerType.Debug);
             }
         }
 
