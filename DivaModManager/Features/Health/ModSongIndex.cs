@@ -7,13 +7,19 @@ using System.Text;
 namespace DivaModManager.Features.Health
 {
     /// <summary>
-    /// 各 Mod の mod_pv_db.txt に入っている曲（ID と曲名）。曲名・ID で Mod を探すのに使う
+    /// 各 Mod の mod_pv_db.txt に入っている曲（ID・曲名・難易度）。曲名・ID で Mod を探す、曲の一覧を作るのに使う
     /// </summary>
     public static class ModSongIndex
     {
-        public record Song(int Id, string Name, string NameJp);
+        /// <param name="Difficulties">"E N H EX EXEX" のような、遊べる難易度</param>
+        public record Song(int Id, string Name, string NameJp, string Difficulties);
 
         private static readonly Dictionary<string, (DateTime Time, List<Song> Songs)> cache = new(StringComparer.OrdinalIgnoreCase);
+
+        private static readonly (string Key, string Label)[] DifficultyOrder =
+        {
+            ("easy", "E"), ("normal", "N"), ("hard", "H"), ("extreme", "EX"),
+        };
 
         public static List<Song> GetSongs(string modDir)
         {
@@ -25,6 +31,7 @@ namespace DivaModManager.Features.Health
                 if (cache.TryGetValue(modDir, out var c) && c.Time == time) return c.Songs;
             }
             var names = new SortedDictionary<int, (string Jp, string En)>();
+            var lengths = new Dictionary<(int Id, string Diff), int>();
             try
             {
                 foreach (var line in File.ReadLines(pvDb, Encoding.UTF8))
@@ -34,15 +41,35 @@ namespace DivaModManager.Features.Health
                     var eq = line.IndexOf('=');
                     if (dot < 4 || eq < dot || !int.TryParse(line.AsSpan(3, dot - 3), out var id)) continue;
                     var key = line.Substring(dot + 1, eq - dot - 1);
-                    if (key != "song_name" && key != "song_name_en") continue;
-                    names.TryGetValue(id, out var n);
-                    if (key == "song_name") n.Jp = line.Substring(eq + 1).Trim();
-                    else n.En = line.Substring(eq + 1).Trim();
-                    names[id] = n;
+                    var value = line.Substring(eq + 1).Trim();
+                    if (key == "song_name" || key == "song_name_en")
+                    {
+                        names.TryGetValue(id, out var n);
+                        if (key == "song_name") n.Jp = value; else n.En = value;
+                        names[id] = n;
+                    }
+                    else if (key.StartsWith("difficulty.") && key.EndsWith(".length") && int.TryParse(value, out var len))
+                    {
+                        lengths[(id, key.Split('.')[1])] = len;
+                    }
                 }
             }
             catch (Exception) { }
-            var songs = names.Select(x => new Song(x.Key, string.IsNullOrEmpty(x.Value.En) ? x.Value.Jp ?? "" : x.Value.En, x.Value.Jp ?? "")).ToList();
+
+            string Difficulties(int id)
+            {
+                var list = new List<string>();
+                foreach (var (key, label) in DifficultyOrder)
+                {
+                    lengths.TryGetValue((id, key), out var len);
+                    if (len > 0) list.Add(label);
+                    // extreme の 2 つ目は EXTRA EXTREME
+                    if (key == "extreme" && len > 1) list.Add("EXEX");
+                }
+                return string.Join(" ", list);
+            }
+
+            var songs = names.Select(x => new Song(x.Key, string.IsNullOrEmpty(x.Value.En) ? x.Value.Jp ?? "" : x.Value.En, x.Value.Jp ?? "", Difficulties(x.Key))).ToList();
             lock (cache) cache[modDir] = (time, songs);
             return songs;
         }
@@ -56,17 +83,22 @@ namespace DivaModManager.Features.Health
             var result = new Dictionary<string, List<Song>>(StringComparer.OrdinalIgnoreCase);
             query = (query ?? "").Trim();
             if (query.Length == 0) return result;
-            var idText = query.StartsWith("pv_", StringComparison.OrdinalIgnoreCase) ? query[3..] : query;
-            var isId = int.TryParse(idText, out var id);
             foreach (var dir in modDirs.Where(d => !string.IsNullOrEmpty(d)).Distinct(StringComparer.OrdinalIgnoreCase))
             {
-                var matches = GetSongs(dir).Where(s =>
-                    (isId && s.Id == id)
-                    || s.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
-                    || s.NameJp.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+                var matches = GetSongs(dir).Where(s => Matches(s, query)).ToList();
                 if (matches.Count > 0) result[dir] = matches;
             }
             return result;
+        }
+
+        public static bool Matches(Song s, string query)
+        {
+            query = (query ?? "").Trim();
+            if (query.Length == 0) return true;
+            var idText = query.StartsWith("pv_", StringComparison.OrdinalIgnoreCase) ? query[3..] : query;
+            return (int.TryParse(idText, out var id) && s.Id == id)
+                || s.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || s.NameJp.Contains(query, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

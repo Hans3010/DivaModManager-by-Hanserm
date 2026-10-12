@@ -9,6 +9,7 @@
         xmlns:dev="clr-namespace:DivaModManager.Features.Debug"
         xmlns:song="clr-namespace:DivaModManager.Features.Song"
         xmlns:module="clr-namespace:DivaModManager.Features.Module"
+        xmlns:songs="clr-namespace:DivaModManager.Features.Songs"
         xmlns:converters="clr-namespace:DivaModManager.Common.Converters"
         Background="#131313"
         Title="DivaModManager by Hanserm"
@@ -1621,6 +1622,9 @@
                         </ListView>
                     </Border>
                 </Grid>
+            </TabItem>
+            <TabItem Name="SongListTabItem" Selector.Selected="SongListTab_Selected" FontSize="18" HorizontalAlignment="Center" Header="Song">
+                <songs:SongListTab x:Name="SongListControl"/>
             </TabItem>
             <!--
             <TabItem Name="SongTab" Selector.Selected="SongTab_TabSelected" Selector.Unselected="SongTab_TabUnselected" FontSize="18" HorizontalAlignment="Center" Header="Song" Height="30" VerticalAlignment="Bottom" Visibility="Collapsed">

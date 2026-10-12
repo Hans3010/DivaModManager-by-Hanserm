@@ -46,6 +46,7 @@ Get the latest version from [Releases](https://github.com/Hans3010/DivaModManage
 - **Missing required mods**: reads each mod's requirements from GameBanana (requirements list and "requires ..." links in the description) and DivaModArchive (dependencies), plus what the files show (`rom/nc_db.toml` needs New Classics, `lyrics/*.toml` needs LyricsPatch). Select the row and click **Install** to download the missing mod with the one-click installer.
 - **Launch** checks for errors first and asks before starting the game.
 - Search the mod list by **song name or ID** to find which mod has a song.
+- New **Song** tab: every song your mods add, with its ID, names, mod, difficulties and whether it is used in game or replaced by another mod with the same ID. Search as you type; double-click a song to jump to its mod.
 
 **Save data and disk space** (Option tab)
 - The Mega Mix+ save is backed up every time you press Launch (if it changed); the last 15 backups are kept and can be restored.

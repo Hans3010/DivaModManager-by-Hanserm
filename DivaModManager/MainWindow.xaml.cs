@@ -11,6 +11,7 @@ using DivaModManager.Features.Extract;
 using DivaModManager.Features.Feed;
 using DivaModManager.Features.Health;
 using DivaModManager.Features.Saves;
+using DivaModManager.Features.Songs;
 using DivaModManager.Features.Module;
 using DivaModManager.Features.Song;
 using DivaModManager.Misk;
@@ -320,6 +321,7 @@ namespace DivaModManager
             string ParamInfo = $"id:{Thread.CurrentThread.ManagedThreadId}";
             Logger.WriteLine(string.Join(" ", MeInfo, $"Start."), LoggerType.Debug, param: ParamInfo);
 
+            SongListTab.ShowModRequested += ShowModInList;
             await App.Current.Dispatcher.InvokeAsync(() => OnFirstOpenAsync());
             // 最初の起動でもバックアップがあるように、セーブデータが変わっていれば保存しておく
             _ = Task.Run(SaveBackup.BackupIfChanged);
@@ -4414,6 +4416,34 @@ namespace DivaModManager
                 mod.moduleData.Clear();
             }
         }
+
+        #region 曲の一覧
+
+        private async void SongListTab_Selected(object sender, RoutedEventArgs e)
+        {
+            if (e.OriginalSource != SongListTabItem) return;
+            await SongListControl.RefreshAsync();
+        }
+
+        /// <summary>曲の一覧でダブルクリックした曲の Mod を、Mods タブで選んで表示する</summary>
+        private void ShowModInList(string modName)
+        {
+            ModManagerTab.IsSelected = true;
+            var mod = Global.ModList?.FirstOrDefault(m => m.name == modName);
+            if (mod == null || !ModGrid.Items.Contains(mod))
+            {
+                // 検索で隠れているときは検索を解除する
+                SearchModListTextBox.Text = string.Empty;
+                Global.ModList = Global.ModList_All;
+                ModGrid.ItemsSource = Global.ModList;
+                mod = Global.ModList.FirstOrDefault(m => m.name == modName);
+            }
+            if (mod == null) return;
+            ModGrid.SelectedItem = mod;
+            ModGrid.ScrollIntoView(mod);
+        }
+
+        #endregion
 
         #region セーブデータのバックアップ・容量
 

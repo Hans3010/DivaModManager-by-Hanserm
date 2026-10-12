@@ -1,0 +1,93 @@
+<UserControl x:Class="DivaModManager.Features.Songs.SongListTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#202020" FontFamily="{StaticResource DmmFont}">
+    <UserControl.Resources>
+        <Style x:Key="WrapText" TargetType="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+    </UserControl.Resources>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Column="0" Margin="0,0,10,0">
+                <TextBox Name="SearchBox" Height="35" FontSize="18" VerticalContentAlignment="Center" Padding="6,0" TextChanged="SearchBox_TextChanged"/>
+                <TextBlock Name="SearchHint" Text="Search a song name or ID..." Foreground="#808080" FontSize="18" Margin="10,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
+            </Grid>
+            <ComboBox Name="ModFilterBox" Grid.Column="1" Height="35" FontSize="16" Margin="0,0,10,0" SelectionChanged="Filter_Changed"/>
+            <CheckBox Name="OnlyEnabledBox" Grid.Column="2" Content="Only enabled mods" Foreground="#f2f2f2" FontSize="16" VerticalAlignment="Center" Margin="0,0,14,0" IsChecked="True" Checked="Filter_Changed" Unchecked="Filter_Changed"/>
+            <CheckBox Name="ProblemsOnlyBox" Grid.Column="3" Content="Only replaced songs" Foreground="#f2f2f2" FontSize="16" VerticalAlignment="Center" Margin="0,0,14,0" Checked="Filter_Changed" Unchecked="Filter_Changed"
+                      ToolTip="Songs that two enabled mods add with the same ID: only the mod higher in the list is used."/>
+            <Button Grid.Column="4" Content="Refresh" Width="110" Height="35" FontSize="16" Foreground="#f2f2f2" Background="#181818" BorderBrush="#454545" Click="RefreshButton_Click"/>
+        </Grid>
+
+        <DataGrid Name="SongGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                  Background="#181818" Foreground="#f2f2f2" RowBackground="#202020" AlternatingRowBackground="#262626"
+                  BorderBrush="#353535" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#303030" FontSize="15"
+                  SelectionMode="Single" CanUserSortColumns="True" MouseDoubleClick="SongGrid_MouseDoubleClick">
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="Background" Value="#181818"/>
+                    <Setter Property="Foreground" Value="#f2f2f2"/>
+                    <Setter Property="Padding" Value="6,4"/>
+                    <Setter Property="BorderBrush" Value="#353535"/>
+                    <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+            <DataGrid.CellStyle>
+                <Style TargetType="DataGridCell">
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Padding" Value="4"/>
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="#2f4f4d"/>
+                            <Setter Property="Foreground" Value="White"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.CellStyle>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="70"/>
+                <DataGridTextColumn Header="Song" Binding="{Binding Name}" Width="2*" ElementStyle="{StaticResource WrapText}"/>
+                <DataGridTextColumn Header="Japanese name" Binding="{Binding NameJp}" Width="2*" ElementStyle="{StaticResource WrapText}"/>
+                <DataGridTextColumn Header="Mod" Binding="{Binding Mod}" Width="1.5*" ElementStyle="{StaticResource WrapText}"/>
+                <DataGridTextColumn Header="Difficulties" Binding="{Binding Difficulties}" Width="140"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="1.5*">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="TextWrapping" Value="Wrap"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status}" Value="InGame">
+                                    <Setter Property="Foreground" Value="#3edcd0"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="Replaced">
+                                    <Setter Property="Foreground" Value="#ffb347"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="Disabled">
+                                    <Setter Property="Foreground" Value="#7a7a7a"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Grid Grid.Row="2" Margin="0,8,0,0">
+            <TextBlock Name="CountText" Foreground="#d0d0d0" FontSize="15" HorizontalAlignment="Left"/>
+            <TextBlock Text="Double-click a song to show its mod in the Mods tab." Foreground="#909090" FontSize="14" HorizontalAlignment="Right"/>
+        </Grid>
+    </Grid>
+</UserControl>
