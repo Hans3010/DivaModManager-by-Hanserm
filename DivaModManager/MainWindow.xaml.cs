@@ -622,10 +622,10 @@ namespace DivaModManager
                 try { await ModRequirements.RefreshAsync(installed.Select(m => m.Homepage).Where(h => h != null)); }
                 catch (Exception) { }
                 var (conflicts, problems) = await Task.Run(() => (ModConflictScanner.Scan(mods), ModHealthScanner.Scan(mods, gameDir, installed)));
-                var important = problems.Count(p => p.Severity != HealthSeverity.Info);
+                var important = problems.Count(p => !p.Ignored && p.Severity != HealthSeverity.Info);
                 var total = conflicts.Count + important;
                 ConflictsButton.Content = total > 0 ? $"{UiTranslator.T("Check mods")} ({total})" : UiTranslator.T("Check mods");
-                ConflictsButton.Foreground = new System.Windows.Media.SolidColorBrush(problems.Any(p => p.Severity == HealthSeverity.Error)
+                ConflictsButton.Foreground = new System.Windows.Media.SolidColorBrush(problems.Any(p => !p.Ignored && p.Severity == HealthSeverity.Error)
                     ? System.Windows.Media.Color.FromRgb(0xff, 0x7b, 0x72)
                     : total > 0 ? System.Windows.Media.Color.FromRgb(0xff, 0xb3, 0x47)
                     : System.Windows.Media.Color.FromRgb(0xf2, 0xf2, 0xf2));
@@ -1052,7 +1052,7 @@ namespace DivaModManager
                     var mods = GetEnabledModsInPriority();
                     var gameDir = ModHealthScanner.GameDir;
                     var installed = GetInstalledMods();
-                    var errors = (await Task.Run(() => ModHealthScanner.Scan(mods, gameDir, installed))).Where(p => p.Severity == HealthSeverity.Error).ToList();
+                    var errors = (await Task.Run(() => ModHealthScanner.Scan(mods, gameDir, installed))).Where(p => !p.Ignored && p.Severity == HealthSeverity.Error).ToList();
                     if (errors.Count > 0 && !ConfirmLaunchWithProblems(errors))
                         return;
 
@@ -3318,9 +3318,15 @@ namespace DivaModManager
                 return;
             }
 
-            var confirm = MessageBox.Show($"Sort by {header}.\nThe priority of the mod will change significantly.\n\nAre you sure?",
-                                          "Attention.", MessageBoxButton.OKCancel, MessageBoxImage.Question);
-            if (confirm != MessageBoxResult.OK) return;
+            // 並べ替えると読み込み順（上ほど優先）が変わるので確認する
+            var detail = header == "Priority"
+                ? UiTranslator.T("\"Priority\" is an optional label you can type in each mod (double-click the cell), for example 1, 2 or -1. Sorting puts the mods in the order of those labels; mods without a label keep their place in the middle.")
+                : UiTranslator.T("The load order changes: mods higher in the list win when they overwrite each other.");
+            var confirm = new DmmMessageWindowYesNo(UiTranslator.Format("Sort the mod list by {0}?", UiTranslator.T(header)), detail, UiTranslator.T("Sort")) { Owner = this };
+            confirm.Button_1.Content = UiTranslator.T("Sort");
+            confirm.Button_2.Content = UiTranslator.T("Cancel");
+            confirm.ShowDialog();
+            if (!confirm.YesNo) return;
 
             switch (header)
             {

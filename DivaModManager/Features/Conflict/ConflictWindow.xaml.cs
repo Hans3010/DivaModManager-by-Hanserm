@@ -48,9 +48,11 @@ namespace DivaModManager.Features.Conflict
             var (conflicts, problems) = await Task.Run(() => (ModConflictScanner.Scan(mods), ModHealthScanner.Scan(mods, gameDir, installed)));
 
             ConflictGrid.ItemsSource = conflicts;
-            ProblemGrid.ItemsSource = problems.OrderBy(p => p.Severity).ThenBy(p => p.Mod).ToList();
+            ProblemGrid.ItemsSource = problems.OrderBy(p => p.Ignored).ThenBy(p => p.Severity).ThenBy(p => p.Mod).ToList();
+            var ignored = problems.Count(p => p.Ignored);
+            problems = problems.Where(p => !p.Ignored).ToList();
             ConflictHeader.Text = $"{UiTranslator.T("Conflicts")} ({conflicts.Count})";
-            ProblemHeader.Text = $"{UiTranslator.T("Problems")} ({problems.Count})";
+            ProblemHeader.Text = $"{UiTranslator.T("Problems")} ({problems.Count})" + (ignored > 0 ? "  " + UiTranslator.Format("+ {0} ignored", ignored) : "");
 
             var parts = new List<string>();
             if (conflicts.Count > 0)
@@ -105,7 +107,17 @@ namespace DivaModManager.Features.Conflict
 
         private void ProblemGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            InstallButton.IsEnabled = ProblemGrid.SelectedItem is HealthIssue { InstallUrl: not null };
+            var issue = ProblemGrid.SelectedItem as HealthIssue;
+            InstallButton.IsEnabled = issue is { InstallUrl: not null, Ignored: false };
+            IgnoreButton.IsEnabled = issue != null;
+            IgnoreButton.Content = UiTranslator.T(issue is { Ignored: true } ? "Don't ignore" : "Ignore");
+        }
+
+        private async void IgnoreButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (ProblemGrid.SelectedItem is not HealthIssue issue) return;
+            IgnoredProblems.Set(issue.Key, !issue.Ignored);
+            await ScanAsync();
         }
 
         private async void InstallButton_Click(object sender, RoutedEventArgs e)

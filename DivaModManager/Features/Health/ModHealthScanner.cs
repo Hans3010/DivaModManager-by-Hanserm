@@ -26,8 +26,13 @@ namespace DivaModManager.Features.Health
         /// <summary>必要な Mod のページ（あれば「インストール」ボタンで使う）</summary>
         public string InstallUrl { get; set; }
         public string InstallName { get; set; }
+        /// <summary>何についての問題か（曲 ID・DLL 名など）。無視リストのキーに使う（表示言語が変わっても同じ）</summary>
+        public string Subject { get; set; }
+        /// <summary>ユーザーが「無視」にした問題（数えない・起動前に聞かない）</summary>
+        public bool Ignored { get; set; }
+        public string Key => $"{Mod}|{Kind}|{Subject}";
 
-        public string SeverityText => UiTranslator.T(Severity switch
+        public string SeverityText => UiTranslator.T(Ignored ? "Ignored" : Severity switch
         {
             HealthSeverity.Error => "Error",
             HealthSeverity.Warning => "Warning",
@@ -91,8 +96,29 @@ namespace DivaModManager.Features.Health
                 if (File.Exists(pvDb))
                     CheckSongs(name, pvDb, gameDir, modFiles, hasLyricLimitPatch, issues);
             }
+
+            // ThumbnailSplitter は一番上（優先度が最も高い）に置く必要がある（作者の説明）
+            var splitter = valid.FindIndex(m => IsThumbnailSplitter(m.Name, m.Path));
+            if (splitter > 0)
+            {
+                issues.Add(new HealthIssue
+                {
+                    Severity = HealthSeverity.Warning,
+                    Mod = valid[splitter].Name,
+                    Kind = "Wrong load order",
+                    Subject = "ThumbnailSplitter",
+                    Detail = UiTranslator.T("ThumbnailSplitter has to be at the top of the mod list to work properly. Drag it to the first place."),
+                });
+            }
+
+            foreach (var issue in issues) issue.Ignored = IgnoredProblems.Contains(issue.Key);
             return issues;
         }
+
+        /// <summary>ThumbnailSplitter（パック同士のサムネイルの競合を自動で解決する Mod）か</summary>
+        public static bool IsThumbnailSplitter(string name, string path) =>
+            (name ?? "").Replace(" ", "").Contains("ThumbnailSplitter", StringComparison.OrdinalIgnoreCase)
+            || (!string.IsNullOrEmpty(path) && File.Exists(Path.Combine(path, "ThumbnailSplitter.dll")));
 
         #region 必要な Mod
 
@@ -126,6 +152,7 @@ namespace DivaModManager.Features.Health
                         Severity = req.Optional ? HealthSeverity.Info : HealthSeverity.Error,
                         Mod = mod,
                         Kind = req.Optional ? "Recommended mod" : "Missing required mod",
+                        Subject = req.Url + "|" + req.Name,
                         Detail = req.Optional
                             ? UiTranslator.Format("{0} recommends {1}. Select this row and click Install to get it.", mod, req.Name)
                             : UiTranslator.Format("{0} needs {1}, which isn't installed. Select this row and click Install to get it.", mod, req.Name),
@@ -140,6 +167,7 @@ namespace DivaModManager.Features.Health
                         Severity = HealthSeverity.Warning,
                         Mod = mod,
                         Kind = "Required mod disabled",
+                        Subject = found.Name,
                         Detail = UiTranslator.Format("{0} needs {1}, which is installed but disabled. Enable it in the mod list.", mod, found.Name),
                     });
                 }
@@ -176,7 +204,7 @@ namespace DivaModManager.Features.Health
                 var dllPath = Path.GetFullPath(Path.Combine(modPath, dll));
                 if (!File.Exists(dllPath))
                 {
-                    issues.Add(new HealthIssue { Severity = HealthSeverity.Error, Mod = mod, Kind = "Missing DLL", Detail = UiTranslator.Format("{0} is listed in config.toml but doesn't exist.", dll) });
+                    issues.Add(new HealthIssue { Severity = HealthSeverity.Error, Mod = mod, Kind = "Missing DLL", Subject = dll, Detail = UiTranslator.Format("{0} is listed in config.toml but doesn't exist.", dll) });
                     continue;
                 }
                 List<string> imports;
@@ -197,6 +225,7 @@ namespace DivaModManager.Features.Health
                         Severity = HealthSeverity.Error,
                         Mod = mod,
                         Kind = "DLL won't load",
+                        Subject = Path.GetFileName(dllPath),
                         Detail = UiTranslator.Format("{0} needs {1}, which the game can't find. It will show \"Failed to load\". Reinstall the mod or get a build that includes them.", Path.GetFileName(dllPath), string.Join(", ", missing)),
                     });
                 }
@@ -236,6 +265,7 @@ namespace DivaModManager.Features.Health
 
             var missingBySong = new Dictionary<string, (List<string> Charts, List<string> Audio, List<string> Movies)>();
             var lyricCount = new Dictionary<string, int>();
+            var presentCharts = new Dictionary<string, int>();
 
             foreach (var (key, value) in kv)
             {
@@ -256,7 +286,11 @@ namespace DivaModManager.Features.Health
                 if (!IsActiveEntry(kv, id, rest)) continue;
 
                 var file = value.Replace('\\', '/');
-                if (FileExists(file, gameDir, modFiles)) continue;
+                if (FileExists(file, gameDir, modFiles))
+                {
+                    if (rest.Contains("script_file_name")) { presentCharts.TryGetValue(id, out var n); presentCharts[id] = n + 1; }
+                    continue;
+                }
 
                 if (!missingBySong.TryGetValue(id, out var m)) { m = (new(), new(), new()); missingBySong[id] = m; }
                 if (rest.Contains("script_file_name")) m.Charts.Add(Path.GetFileName(file));
@@ -267,13 +301,26 @@ namespace DivaModManager.Features.Health
             foreach (var (id, m) in missingBySong.OrderBy(x => int.TryParse(x.Key, out var n) ? n : 0))
             {
                 var song = $"pv_{id} {SongName(id)}".Trim();
-                if (m.Charts.Count > 0 || m.Audio.Count > 0)
+                // ほかの難易度の譜面はあって、音声もある → その難易度だけ選べない（曲は遊べる）
+                if (m.Audio.Count == 0 && m.Charts.Count > 0 && presentCharts.ContainsKey(id))
+                {
+                    issues.Add(new HealthIssue
+                    {
+                        Severity = HealthSeverity.Warning,
+                        Mod = mod,
+                        Kind = "Missing difficulty",
+                        Subject = $"pv_{id}",
+                        Detail = UiTranslator.Format("{0}: missing {1}. That difficulty won't load, the others work. This comes from the mod itself.", song, string.Join(", ", m.Charts.Distinct())),
+                    });
+                }
+                else if (m.Charts.Count > 0 || m.Audio.Count > 0)
                 {
                     issues.Add(new HealthIssue
                     {
                         Severity = HealthSeverity.Error,
                         Mod = mod,
                         Kind = "Missing song files",
+                        Subject = $"pv_{id}",
                         Detail = UiTranslator.Format("{0}: missing {1}. The song may not load or may crash.", song, string.Join(", ", m.Charts.Concat(m.Audio).Distinct())),
                     });
                 }
@@ -284,6 +331,7 @@ namespace DivaModManager.Features.Health
                         Severity = HealthSeverity.Warning,
                         Mod = mod,
                         Kind = "Missing video",
+                        Subject = $"pv_{id}",
                         Detail = UiTranslator.Format("{0}: missing {1}. The song plays without its video (some packs offer videos as a separate download).", song, string.Join(", ", m.Movies.Distinct())),
                     });
                 }
@@ -302,6 +350,7 @@ namespace DivaModManager.Features.Health
                         Severity = HealthSeverity.Info,
                         Mod = mod,
                         Kind = "Lyrics cut off",
+                        Subject = $"pv_{id}",
                         Detail = UiTranslator.Format("pv_{0} {1} has {2} lyric lines, but the game only shows {3}. Install OpenLyricLimit (included in Spanish Lyrics) to see them all.", id, SongName(id), lines, LYRIC_LIMIT),
                     });
                 }

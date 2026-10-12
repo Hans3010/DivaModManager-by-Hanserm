@@ -65,6 +65,9 @@ namespace DivaModManager.Features.Conflict
             var costumes = new Dictionary<string, (List<string> Mods, string Name)>(StringComparer.OrdinalIgnoreCase);
             var items = new Dictionary<int, (List<string> Mods, string Name)>();
 
+            // ThumbnailSplitter があれば、パックごとのサムネイル（spr_sel_pvtmb.farc）の重複は自動で分けられる
+            var hasSplitter = mods.Any(m => Health.ModHealthScanner.IsThumbnailSplitter(m.Name, m.Path));
+
             foreach (var (name, path) in mods)
             {
                 if (string.IsNullOrEmpty(path) || !Directory.Exists(path)) continue;
@@ -77,6 +80,9 @@ namespace DivaModManager.Features.Conflict
                     if (fileName.StartsWith("mod_", StringComparison.OrdinalIgnoreCase)) continue;
                     // ほかの Mod の DLL が Mod フォルダごとに読み込むファイルも競合しない
                     if (PerModFiles.Contains(relative)) continue;
+                    // バックアップ（.bak。Fix thumbnails などで作られる）はゲームが読み込まないので競合しない
+                    if (relative.EndsWith(".bak", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (hasSplitter && relative.Equals("rom/2d/spr_sel_pvtmb.farc", StringComparison.OrdinalIgnoreCase)) continue;
                     AddUnique(files, relative, name);
                     displayPath.TryAdd(relative, relative);
                 }

@@ -110,6 +110,10 @@
                                 <DataTrigger Binding="{Binding Severity}" Value="Info">
                                     <Setter Property="Foreground" Value="#8ab4f8"/>
                                 </DataTrigger>
+                                <DataTrigger Binding="{Binding Ignored}" Value="True">
+                                    <Setter Property="Foreground" Value="#7a7a7a"/>
+                                    <Setter Property="FontWeight" Value="Normal"/>
+                                </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </DataGridTextColumn.ElementStyle>
@@ -121,6 +125,9 @@
         </DataGrid>
 
         <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Name="IgnoreButton" Content="Ignore" Width="130" Height="34" Margin="0,0,10,0" FontSize="16" IsEnabled="False"
+                    ToolTip="Hide the selected problem (for example, something the mod's author has to fix). It is no longer counted or asked about before launching."
+                    Foreground="#f2f2f2" Background="#181818" BorderBrush="#454545" Click="IgnoreButton_Click"/>
             <Button Name="InstallButton" Content="Install" Width="130" Height="34" Margin="0,0,10,0" FontSize="16" IsEnabled="False"
                     ToolTip="Download and install the missing mod selected in Problems."
                     Foreground="#f2f2f2" Background="#181818" BorderBrush="#454545" Click="InstallButton_Click"/>
