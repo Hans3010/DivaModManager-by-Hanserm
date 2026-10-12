@@ -202,3 +202,8 @@
 "See this author's mods" = "Ver los mods de este autor"
 "Mods by {0} ({1})" = "Mods de {0} ({1})"
 "← Back to the list" = "← Volver a la lista"
+"Unfinished download: {0}" = "Descarga sin terminar: {0}"
+"{0} were downloaded before the manager closed. Continue now? Only the missing part is downloaded." = "Se descargaron {0} antes de que se cerrara el manager. ¿Continuar ahora? Solo se descarga lo que falta."
+"Unfinished download" = "Descarga sin terminar"
+"Continue" = "Continuar"
+"Later" = "Más tarde"

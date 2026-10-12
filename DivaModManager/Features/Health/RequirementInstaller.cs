@@ -51,7 +51,8 @@ namespace DivaModManager.Features.Health
             }
         }
 
-        private static void StartDownload(string protocolLine)
+        /// <summary>Starts a one-click download ("divamodmanager:...") in a new DivaModManager process</summary>
+        public static void StartDownload(string protocolLine)
         {
             var exe = Environment.ProcessPath;
             Process.Start(new ProcessStartInfo(exe, $"-download \"{protocolLine}\"") { UseShellExecute = false, WorkingDirectory = Global.assemblyLocation });

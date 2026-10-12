@@ -325,9 +325,8 @@ namespace DivaModManager
             await App.Current.Dispatcher.InvokeAsync(() => OnFirstOpenAsync());
             // Back up the save if it changed, so there's a backup from the very first launch
             _ = Task.Run(SaveBackup.BackupIfChanged);
-            // Downloads cut off last time (the manager was closed or crashed) can be continued
-            foreach (var (file, size) in ResumableDownload.FindUnfinished())
-                Logger.WriteLine($"Unfinished download: {file} ({FileHelper.GetDirectorySizeView10(size)} so far). Download the same mod again to continue where it stopped.", LoggerType.Warning);
+            // Downloads cut off last time (the manager was closed or crashed): offer to continue them once the window is shown
+            _ = Dispatcher.InvokeAsync(OfferUnfinishedDownloads, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
             if (!Global.IsWine && Global.ConfigToml.DivaModManagerUpdateCheck)
             {
                 Logger.WriteLine("Checking for DivaModManager by Hanserm update...", LoggerType.Info);
@@ -1087,6 +1086,37 @@ namespace DivaModManager
             else
             {
                 Logger.WriteLine($"Please click Setup before launching!", LoggerType.Warning);
+            }
+        }
+
+        /// <summary>Asks whether to continue each download that was cut off (only the missing part is downloaded)</summary>
+        private void OfferUnfinishedDownloads()
+        {
+            foreach (var download in ResumableDownload.FindUnfinished())
+            {
+                var size = FileHelper.GetDirectorySizeView10(download.Size);
+                if (download.ResumeLine == null)
+                {
+                    Logger.WriteLine($"Unfinished download: {download.FileName} ({size} so far). Download the same mod again to continue where it stopped.", LoggerType.Warning);
+                    continue;
+                }
+                var window = new DmmMessageWindowYesNo(
+                    UiTranslator.Format("Unfinished download: {0}", download.FileName),
+                    UiTranslator.Format("{0} were downloaded before the manager closed. Continue now? Only the missing part is downloaded.", size),
+                    UiTranslator.T("Unfinished download"))
+                { Owner = this };
+                window.Button_1.Content = UiTranslator.T("Continue");
+                window.Button_2.Content = UiTranslator.T("Later");
+                window.ShowDialog();
+                if (window.YesNo)
+                {
+                    Logger.WriteLine($"Continuing the download of {download.FileName}...", LoggerType.Info);
+                    RequirementInstaller.StartDownload(download.ResumeLine);
+                }
+                else
+                {
+                    Logger.WriteLine($"{download.FileName} stays unfinished ({size}). Download the same mod again to continue, or remove it with Option > Clean downloads.", LoggerType.Info);
+                }
             }
         }
 
@@ -2844,6 +2874,13 @@ namespace DivaModManager
             DMARefreshFilterAsync();
         }
 
+        /// <summary>Opens a mod's page from the Site column</summary>
+        private void SiteLink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        {
+            if (e.Uri != null) ProcessHelper.TryStartProcess(e.Uri.ToString());
+            e.Handled = true;
+        }
+
         /// <summary>Clicking the author on a GameBanana card opens their page (submissions)</summary>
         private void GBAuthor_Click(object sender, MouseButtonEventArgs e)
         {
@@ -4163,6 +4200,8 @@ namespace DivaModManager
             GBModBrowserTab.IsEnabled = isDMLInstalled | isEnableTabs;
             DMAModBrowserTab.Visibility = Visibility.Visible;
             DMAModBrowserTab.IsEnabled = isDMLInstalled | isEnableTabs;
+            // The Song tab is disabled with the others while the manager is busy (downloading, extracting...)
+            SongListTabItem.IsEnabled = isDMLInstalled | isEnableTabs;
             //SongTab.Visibility = Visibility.Visible;
             //SongTab.IsEnabled = isDMLInstalled | isEnableTabs;
             ModuleTab.Visibility = Visibility.Visible;

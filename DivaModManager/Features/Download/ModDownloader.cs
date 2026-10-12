@@ -117,7 +117,7 @@ namespace DivaModManager.Features.Download
                     await WorkManager.RunAsync(async () =>
                     {
                         var filePath = await DownloadFile(downloadUrl, fileName, new Progress<DownloadProgress>(ReportUpdateProgress),
-                                    CancellationTokenSource.CreateLinkedTokenSource(cancellationToken.Token));
+                                    CancellationTokenSource.CreateLinkedTokenSource(cancellationToken.Token), GameBananaResumeLine(downloadUrl, record.Link));
                         if (!cancelled)
                         {
                             record.Url = downloadUrl;
@@ -230,7 +230,7 @@ namespace DivaModManager.Features.Download
                     await WorkManager.RunAsync(async () =>
                     {
                         var filePath = await DownloadFile(downloadUrl, fileName, new Progress<DownloadProgress>(ReportUpdateProgress),
-                                CancellationTokenSource.CreateLinkedTokenSource(cancellationToken.Token));
+                                CancellationTokenSource.CreateLinkedTokenSource(cancellationToken.Token), $"divamodmanager:dma/{post.ID}");
                         if (!cancelled)
                         {
                             MoveInfoData moveInfo = new()
@@ -277,7 +277,7 @@ namespace DivaModManager.Features.Download
                                 if (downloadWindow.YesNo)
                                 {
                                     await DownloadFile(URL_TO_ARCHIVE, fileName, new Progress<DownloadProgress>(ReportUpdateProgress),
-                                        CancellationTokenSource.CreateLinkedTokenSource(cancellationToken.Token));
+                                        CancellationTokenSource.CreateLinkedTokenSource(cancellationToken.Token), line.StartsWith("divamodmanager:") ? line : "divamodmanager:" + line);
                                     if (!cancelled)
                                     {
                                         response.Site = ExtractInfo.SITE.GAMEBANANA_API;
@@ -317,7 +317,7 @@ namespace DivaModManager.Features.Download
                                     if (downloadUrl != null && fileName != null)
                                     {
                                         await DownloadFile(downloadUrl, fileName, new Progress<DownloadProgress>(ReportUpdateProgress),
-                                                    CancellationTokenSource.CreateLinkedTokenSource(cancellationToken.Token));
+                                                    CancellationTokenSource.CreateLinkedTokenSource(cancellationToken.Token), line.StartsWith("divamodmanager:") ? line : "divamodmanager:" + line);
                                         if (!cancelled)
                                         {
                                             DMAresponse.Url = downloadUrl;
@@ -433,7 +433,15 @@ namespace DivaModManager.Features.Download
             }
         }
         // Download function Core ?
-        private async Task<string> DownloadFile(string uri, string fileName, Progress<DownloadProgress> progress, CancellationTokenSource cancellationToken, [CallerMemberName] string caller = "")
+        /// <summary>One-click line to download a GameBanana file / DivaModArchive post again (to continue it later)</summary>
+        private static string GameBananaResumeLine(string downloadUrl, Uri modPage)
+        {
+            var file = Regex.Match(downloadUrl ?? "", @"/(?:dl|mmdl)/(\d+)");
+            var mod = Regex.Match(modPage?.ToString() ?? "", @"/mods/(\d+)");
+            return file.Success && mod.Success ? $"divamodmanager:https://gamebanana.com/mmdl/{file.Groups[1].Value},Mod,{mod.Groups[1].Value}" : null;
+        }
+
+        private async Task<string> DownloadFile(string uri, string fileName, Progress<DownloadProgress> progress, CancellationTokenSource cancellationToken, string resumeLine = null, [CallerMemberName] string caller = "")
         {
             string MeInfo = Logger.GetMeInfo(new StackFrame());
             string ParamInfo = $"caller:{caller}, id:{Thread.CurrentThread.ManagedThreadId}";
@@ -450,7 +458,7 @@ namespace DivaModManager.Features.Download
                 FileStream fs;
                 try
                 {
-                    (fs, _) = ResumableDownload.Open(ret, uri);
+                    (fs, _) = ResumableDownload.Open(ret, uri, resumeLine);
                 }
                 catch (Exception e)
                 {

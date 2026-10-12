@@ -53,7 +53,9 @@ namespace DivaModManager.Models
 
             var homepage = metadataManager.metadata?.homepage;
             if (homepage != null && !string.IsNullOrEmpty(homepage.ToString()) && !string.IsNullOrWhiteSpace(homepage.DnsSafeHost.ToString()))
-                _site = Metadata.HOSTS.Where(x => x.Value == homepage.ToString()).FirstOrDefault().Key;
+                // Compare the host ("gamebanana.com"), not the whole page URL, which never matched
+                _site = Metadata.HOSTS.FirstOrDefault(x => homepage.DnsSafeHost.Equals(x.Value, StringComparison.OrdinalIgnoreCase)
+                    || homepage.DnsSafeHost.EndsWith("." + x.Value, StringComparison.OrdinalIgnoreCase)).Key ?? "-";
             else
                 _site = "-";
 
@@ -167,6 +169,9 @@ namespace DivaModManager.Models
                 OnPropertyChanged();
             }
         }
+        /// <summary>Page the mod was downloaded from (mod.json homepage), shown as a link in the Site column</summary>
+        [JsonIgnore]
+        public Uri? homepage => metadataManager?.metadata?.homepage;
         [JsonIgnore]
         public virtual string? category
         {

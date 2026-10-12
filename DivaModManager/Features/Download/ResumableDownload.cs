@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace DivaModManager.Features.Download
 {
@@ -21,6 +22,22 @@ namespace DivaModManager.Features.Download
         {
             public string Url { get; set; }
             public DateTime Started { get; set; }
+            /// <summary>One-click line that downloads this mod again ("divamodmanager:dma/106", ...), to continue it from a prompt</summary>
+            public string ResumeLine { get; set; }
+        }
+
+        public record Unfinished(string FileName, long Size, string ResumeLine);
+
+        /// <summary>
+        /// Whether two URLs are the same download. GameBanana serves a file as /dl/{id} (mod browser) and as
+        /// /mmdl/{id} (one-click install), so those match by file ID
+        /// </summary>
+        private static bool SameSource(string a, string b)
+        {
+            if (string.Equals(a, b, StringComparison.OrdinalIgnoreCase)) return true;
+            static string GbFile(string url) => Regex.Match(url ?? "", @"gamebanana\.com/(?:dl|mmdl)/(\d+)", RegexOptions.IgnoreCase) is { Success: true } m ? m.Groups[1].Value : null;
+            var fa = GbFile(a);
+            return fa != null && fa == GbFile(b);
         }
 
         private static string MarkerPath(string filePath) => filePath + MARKER_EXTENSION;
@@ -29,14 +46,20 @@ namespace DivaModManager.Features.Download
         /// Opens the file to download into. Keeps the data of an unfinished download of the same URL;
         /// otherwise starts an empty file. Returns the stream and how many bytes are already there.
         /// </summary>
-        public static (FileStream Stream, long Existing) Open(string filePath, string url)
+        /// <param name="resumeLine">One-click line to download this mod again (shown as "Continue" when the manager starts)</param>
+        public static (FileStream Stream, long Existing) Open(string filePath, string url, string resumeLine = null)
         {
             var marker = ReadMarker(filePath);
-            var resume = marker != null && marker.Url == url && File.Exists(filePath) && new FileInfo(filePath).Length > 0;
+            var resume = marker != null && SameSource(marker.Url, url) && File.Exists(filePath) && new FileInfo(filePath).Length > 0;
             if (!resume)
             {
                 if (File.Exists(filePath)) File.Delete(filePath);
-                WriteMarker(filePath, new Marker { Url = url, Started = DateTime.Now });
+                WriteMarker(filePath, new Marker { Url = url, Started = DateTime.Now, ResumeLine = resumeLine });
+            }
+            else if (resumeLine != null && marker.ResumeLine == null)
+            {
+                marker.ResumeLine = resumeLine;
+                WriteMarker(filePath, marker);
             }
             var stream = new FileStream(filePath, resume ? FileMode.Open : FileMode.Create, FileAccess.ReadWrite, FileShare.None);
             if (resume)
@@ -57,15 +80,15 @@ namespace DivaModManager.Features.Download
             try { if (File.Exists(filePath)) File.Delete(filePath); } catch (Exception) { }
         }
 
-        /// <summary>Unfinished downloads in the Downloads folder (file name and size so far)</summary>
-        public static List<(string FileName, long Size)> FindUnfinished()
+        /// <summary>Unfinished downloads in the Downloads folder (file name, size so far, and how to continue them)</summary>
+        public static List<Unfinished> FindUnfinished()
         {
-            var result = new List<(string, long)>();
+            var result = new List<Unfinished>();
             if (!Directory.Exists(Global.downloadBaseLocation)) return result;
-            foreach (var marker in Directory.GetFiles(Global.downloadBaseLocation, "*" + MARKER_EXTENSION))
+            foreach (var markerPath in Directory.GetFiles(Global.downloadBaseLocation, "*" + MARKER_EXTENSION))
             {
-                var file = marker[..^MARKER_EXTENSION.Length];
-                if (File.Exists(file)) result.Add((Path.GetFileName(file), new FileInfo(file).Length));
+                var file = markerPath[..^MARKER_EXTENSION.Length];
+                if (File.Exists(file)) result.Add(new Unfinished(Path.GetFileName(file), new FileInfo(file).Length, ReadMarker(file)?.ResumeLine));
                 else DeleteMarker(file);
             }
             return result;

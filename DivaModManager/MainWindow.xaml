@@ -1051,7 +1051,18 @@
                                         </DataGridTextColumn.CellStyle>
                                     </DataGridTextColumn>
                                     <DataGridTextColumn Header="Version" Binding="{Binding version, Mode=OneWay, NotifyOnTargetUpdated=True}" IsReadOnly="True" Width="65" CanUserResize="True"/>
-                                    <DataGridTextColumn Header="Site" Binding="{Binding site, Mode=OneWay, NotifyOnTargetUpdated=True}" IsReadOnly="True" Width="50" CanUserResize="True"/>
+                                    <!-- GB / DMA as a link to the mod's page -->
+                                    <DataGridTemplateColumn Header="Site" IsReadOnly="True" Width="50" CanUserResize="True">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock ToolTip="{Binding homepage}">
+                                                    <Hyperlink NavigateUri="{Binding homepage}" RequestNavigate="SiteLink_RequestNavigate" Foreground="#3edcd0" TextDecorations="None">
+                                                        <Run Text="{Binding site, Mode=OneWay}"/>
+                                                    </Hyperlink>
+                                                </TextBlock>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
                                     <DataGridTextColumn Header="Category" Binding="{Binding category, Mode=TwoWay, NotifyOnTargetUpdated=True}" Width="120" CanUserResize="True">
                                         <DataGridTextColumn.CellStyle>
                                             <Style TargetType="DataGridCell">

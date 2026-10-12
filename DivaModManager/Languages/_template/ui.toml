@@ -202,3 +202,8 @@
 "See this author's mods" = "See this author's mods"
 "Mods by {0} ({1})" = "Mods by {0} ({1})"
 "← Back to the list" = "← Back to the list"
+"Unfinished download: {0}" = "Unfinished download: {0}"
+"{0} were downloaded before the manager closed. Continue now? Only the missing part is downloaded." = "{0} were downloaded before the manager closed. Continue now? Only the missing part is downloaded."
+"Unfinished download" = "Unfinished download"
+"Continue" = "Continue"
+"Later" = "Later"

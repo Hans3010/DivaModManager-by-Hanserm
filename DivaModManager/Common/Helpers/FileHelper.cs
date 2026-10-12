@@ -162,7 +162,8 @@ namespace DivaModManager.Common.Helpers
                         return false;
                     }
                     var delDirSize = GetDirectoriesSize(deleteDirectoryPath);
-                    if (delDirSize > Global.ConfigToml.WarningDeleteDirectorySize * 1000000)   // MB
+                    // The size warning protects mods; temporary extraction folders (temp_) are the manager's own copies
+                    if (delDirSize > Global.ConfigToml.WarningDeleteDirectorySize * 1000000 && !IsExtractionTempFolder(deleteDirectoryPath))   // MB
                     {
                         List<string> replaceList = new List<string>()
                         {
@@ -385,6 +386,14 @@ namespace DivaModManager.Common.Helpers
             //Logger.WriteLine($"{MeInfo} End, Return:{ret}", LoggerType.Debug);
 
             return ret;
+        }
+
+        /// <summary>A temporary extraction folder (DMM/Downloads/[site/]temp_xxx), which the manager creates and removes itself</summary>
+        public static bool IsExtractionTempFolder(string fullPath)
+        {
+            var downloads = Path.GetFullPath(Global.downloadBaseLocation);
+            var path = Path.GetFullPath(fullPath);
+            return StartsWith(path, downloads) && Path.GetFileName(path.TrimEnd('\\', '/')).StartsWith("temp_", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
