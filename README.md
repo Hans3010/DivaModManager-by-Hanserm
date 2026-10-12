@@ -41,6 +41,15 @@ Get the latest version from [Releases](https://github.com/Hans3010/DivaModManage
 - The button shows the number of conflicts and the log warns when new ones appear.
 - The **Module** tab now reads module tables inside `.farc` archives (how module mods are distributed) and no longer shows an "under development" popup.
 
+**Check mods**
+- The **Check mods** window also lists problems: mod DLLs that won't load (missing DLL, or a DLL that needs libraries the game can't find, which DivaModLoader reports as "Failed to load"), song charts, audio or videos that are missing, and songs with more than 150 lyric lines without OpenLyricLimit.
+- **Launch** checks for errors first and asks before starting the game.
+- Search the mod list by **song name or ID** to find which mod has a song.
+
+**Save data and disk space** (Option tab)
+- The Mega Mix+ save is backed up every time you press Launch (if it changed); the last 15 backups are kept and can be restored.
+- Disk usage of mods, downloads, image cache and save backups, with buttons to clean downloads and the image cache.
+
 **Mod browsers**
 - Cards show an **Installed** badge for mods you already have.
 - Heart button and **Favorites** filter in the GameBanana and DivaModArchive tabs.

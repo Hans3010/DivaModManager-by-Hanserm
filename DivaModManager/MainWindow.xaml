@@ -873,6 +873,7 @@
                             <ComboBoxItem Content="Name &amp; Note" IsSelected="True"/>
                             <ComboBoxItem Content="Name"/>
                             <ComboBoxItem Content="Note"/>
+                            <ComboBoxItem Content="Song name or ID"/>
                         </ComboBox>
                         <ComboBox x:Name="SearchEnabledComboBox" Grid.Column="4" Grid.Row="1" Text="ALL" FontSize="18" ToolTip="Enabled Filter"
                             FontFamily="{StaticResource DmmFont}" FontWeight="Normal" IsEditable="False" Margin="0,8,10,8"
@@ -900,8 +901,8 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Button Name="ConflictsButton" Grid.Column="0" Foreground="#f2f2f2" FontSize="15" Content="Conflicts" Margin="0,0,5,0" Height="35" VerticalAlignment="Center" HorizontalAlignment="Stretch" Background="#181818" BorderBrush="#252525" FontFamily="{StaticResource DmmFont}" Click="ConflictsButton_Click"
-                                    ToolTip="Find enabled mods that overwrite each other (same files, song IDs or module IDs)."/>
+                            <Button Name="ConflictsButton" Grid.Column="0" Foreground="#f2f2f2" FontSize="15" Content="Check mods" Margin="0,0,5,0" Height="35" VerticalAlignment="Center" HorizontalAlignment="Stretch" Background="#181818" BorderBrush="#252525" FontFamily="{StaticResource DmmFont}" Click="ConflictsButton_Click"
+                                    ToolTip="Find enabled mods that overwrite each other, and problems like missing files or mod DLLs that won't load."/>
                             <Button Name="ModGridScreenShotButton" Grid.Column="1" Foreground="#f2f2f2" FontSize="15" Content="ScreenShot" Height="35" VerticalAlignment="Center" HorizontalAlignment="Stretch" Background="#181818" BorderBrush="#252525" FontFamily="{StaticResource DmmFont}" Click="ModGridScreenShotButton_Click"/>
                         </Grid>
                         <Grid x:Name="MiddleGrid" Grid.Row="2" Grid.ColumnSpan="8">
@@ -1658,6 +1659,43 @@
                             <TextBlock Grid.Column="0" Text="🌐 Language / Idioma" Foreground="#f2f2f2" FontSize="18" FontFamily="{StaticResource DmmFont}" VerticalAlignment="Center" Margin="0,0,10,0"/>
                             <ComboBox Name="LanguageComboBox" Grid.Column="1" Height="35" FontSize="18" FontFamily="{StaticResource DmmFont}" SelectionChanged="LanguageComboBox_SelectionChanged">
                             </ComboBox>
+                        </Grid>
+
+                        <!-- セーブデータのバックアップ（ゲーム起動時に自動で作成） -->
+                        <TextBlock Grid.Column="1" Grid.Row="0" Text="💾 Save data backups" Foreground="#f2f2f2" FontSize="18" FontFamily="{StaticResource DmmFont}" VerticalAlignment="Center" Margin="10,0,10,0"
+                                   ToolTip="Your Mega Mix+ save is backed up every time you press Launch (if it changed). The last 15 backups are kept."/>
+                        <Grid Grid.Column="1" Grid.Row="1" Margin="10,0,10,0" VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ComboBox Name="SaveBackupComboBox" Grid.Column="0" Height="35" FontSize="16" FontFamily="{StaticResource DmmFont}" Margin="0,0,10,0"/>
+                            <Button Name="SaveRestoreButton" Grid.Column="1" Content="Restore" Width="110" Height="35" Foreground="#f2f2f2" FontSize="16" Background="#181818" BorderBrush="#252525" FontFamily="{StaticResource DmmFont}" Click="SaveRestoreButton_Click"
+                                    ToolTip="Replace your current save with the selected backup. Your current save is backed up first."/>
+                        </Grid>
+                        <Grid Grid.Column="1" Grid.Row="2" Margin="10,0,10,0" VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Content="Back up now" Height="35" Margin="0,0,5,0" Foreground="#f2f2f2" FontSize="16" Background="#181818" BorderBrush="#252525" FontFamily="{StaticResource DmmFont}" Click="SaveBackupNowButton_Click"/>
+                            <Button Grid.Column="1" Content="Open folder" Height="35" Margin="5,0,0,0" Foreground="#f2f2f2" FontSize="16" Background="#181818" BorderBrush="#252525" FontFamily="{StaticResource DmmFont}" Click="SaveBackupFolderButton_Click"/>
+                        </Grid>
+
+                        <!-- 容量（Mod・ダウンロード・キャッシュ） -->
+                        <TextBlock Grid.Column="2" Grid.Row="0" Grid.ColumnSpan="2" Text="💽 Disk space" Foreground="#f2f2f2" FontSize="18" FontFamily="{StaticResource DmmFont}" VerticalAlignment="Center" Margin="10,0,10,0"/>
+                        <TextBlock Name="DiskSpaceText" Grid.Column="2" Grid.Row="1" Grid.RowSpan="4" Grid.ColumnSpan="2" Foreground="#d0d0d0" FontSize="15" FontFamily="{StaticResource DmmFont}" Margin="10,4,10,0" TextWrapping="Wrap"/>
+                        <Grid Grid.Column="2" Grid.Row="5" Grid.ColumnSpan="2" Margin="10,0,10,0" VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Content="Refresh" Height="35" Margin="0,0,5,0" Foreground="#f2f2f2" FontSize="16" Background="#181818" BorderBrush="#252525" FontFamily="{StaticResource DmmFont}" Click="DiskSpaceRefreshButton_Click"/>
+                            <Button Grid.Column="1" Content="Clean downloads" Height="35" Margin="5,0,5,0" Foreground="#f2f2f2" FontSize="16" Background="#181818" BorderBrush="#252525" FontFamily="{StaticResource DmmFont}" Click="CleanDownloadsButton_Click"
+                                    ToolTip="Delete leftover downloads and temporary extraction folders in DivaModManager's Downloads folder. Installed mods are not touched."/>
+                            <Button Grid.Column="2" Content="Clean image cache" Height="35" Margin="5,0,0,0" Foreground="#f2f2f2" FontSize="16" Background="#181818" BorderBrush="#252525" FontFamily="{StaticResource DmmFont}" Click="CleanImageCacheButton_Click"
+                                    ToolTip="Delete the cached GameBanana / DivaModArchive images. They are downloaded again when needed."/>
                         </Grid>
                     </Grid>
                 </TabItem.Content>

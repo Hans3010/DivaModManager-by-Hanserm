@@ -9,6 +9,8 @@ using DivaModManager.Features.DMM;
 using DivaModManager.Features.Download;
 using DivaModManager.Features.Extract;
 using DivaModManager.Features.Feed;
+using DivaModManager.Features.Health;
+using DivaModManager.Features.Saves;
 using DivaModManager.Features.Module;
 using DivaModManager.Features.Song;
 using DivaModManager.Misk;
@@ -602,25 +604,29 @@ namespace DivaModManager
         }
 
         /// <summary>
-        /// 競合の数をボタンに表示し、増えた場合はログで知らせる
+        /// 競合と問題（エラー・警告）の数をボタンに表示し、増えた場合はログで知らせる
         /// </summary>
         private async Task UpdateConflictIndicatorAsync()
         {
             try
             {
                 var mods = GetEnabledModsInPriority();
-                var conflicts = await Task.Run(() => ModConflictScanner.Scan(mods));
-                ConflictsButton.Content = conflicts.Count > 0 ? $"{UiTranslator.T("Conflicts")} ({conflicts.Count})" : UiTranslator.T("Conflicts");
-                ConflictsButton.Foreground = new System.Windows.Media.SolidColorBrush(conflicts.Count > 0
-                    ? System.Windows.Media.Color.FromRgb(0xff, 0xb3, 0x47)
+                var gameDir = ModHealthScanner.GameDir;
+                var (conflicts, problems) = await Task.Run(() => (ModConflictScanner.Scan(mods), ModHealthScanner.Scan(mods, gameDir)));
+                var important = problems.Count(p => p.Severity != HealthSeverity.Info);
+                var total = conflicts.Count + important;
+                ConflictsButton.Content = total > 0 ? $"{UiTranslator.T("Check mods")} ({total})" : UiTranslator.T("Check mods");
+                ConflictsButton.Foreground = new System.Windows.Media.SolidColorBrush(problems.Any(p => p.Severity == HealthSeverity.Error)
+                    ? System.Windows.Media.Color.FromRgb(0xff, 0x7b, 0x72)
+                    : total > 0 ? System.Windows.Media.Color.FromRgb(0xff, 0xb3, 0x47)
                     : System.Windows.Media.Color.FromRgb(0xf2, 0xf2, 0xf2));
-                if (conflicts.Count > 0 && conflicts.Count != lastConflictCount)
-                    Logger.WriteLine($"{conflicts.Count} conflicts between enabled mods (mods overwriting each other's files, songs or modules). Click \"Conflicts\" for details.", LoggerType.Warning);
-                lastConflictCount = conflicts.Count;
+                if (total > 0 && total != lastConflictCount)
+                    Logger.WriteLine($"{conflicts.Count} conflicts and {important} problems in enabled mods. Click \"Check mods\" for details.", LoggerType.Warning);
+                lastConflictCount = total;
             }
             catch (Exception ex)
             {
-                Logger.WriteLine($"Conflict check failed: {ex.Message}", LoggerType.Debug);
+                Logger.WriteLine($"Mod check failed: {ex.Message}", LoggerType.Debug);
             }
         }
 
@@ -1033,10 +1039,21 @@ namespace DivaModManager
                         path = $"steam://rungameid/{id}";
                     }
 
+                    // 起動前に、ゲームが落ちる・曲が読めない原因になる問題（エラー）だけ確認する
+                    var mods = GetEnabledModsInPriority();
+                    var gameDir = ModHealthScanner.GameDir;
+                    var errors = (await Task.Run(() => ModHealthScanner.Scan(mods, gameDir))).Where(p => p.Severity == HealthSeverity.Error).ToList();
+                    if (errors.Count > 0 && !ConfirmLaunchWithProblems(errors))
+                        return;
+
                     if (!await Global.ConfigUpdatesAsync())
                     {
                         Logger.WriteLine($"Couldn't save the mod configuration. Enabled mods may not be applied in game.", LoggerType.Warning);
                     }
+
+                    // セーブデータが前回から変わっていればバックアップしておく（Option タブから復元できる）
+                    await Task.Run(SaveBackup.BackupIfChanged);
+                    RefreshSaveBackupList();
 
                     Logger.WriteLine($"Launching {path}", LoggerType.Info);
                     var ps = new ProcessStartInfo(path)
@@ -1056,6 +1073,24 @@ namespace DivaModManager
             {
                 Logger.WriteLine($"Please click Setup before launching!", LoggerType.Warning);
             }
+        }
+
+        /// <summary>問題があるときに「それでも起動するか」を聞く。起動するなら true</summary>
+        private bool ConfirmLaunchWithProblems(List<HealthIssue> errors)
+        {
+            var lines = errors.Take(4).Select(p => $"• {p.Mod}: {p.KindText}").ToList();
+            if (errors.Count > 4) lines.Add(UiTranslator.Format("...and {0} more", errors.Count - 4));
+            var window = new DmmMessageWindowYesNo(
+                UiTranslator.Format("{0} problems found that can make the game or a song fail.", errors.Count),
+                string.Join("\n", lines),
+                UiTranslator.T("Check mods"))
+            { Owner = this };
+            window.Button_1.Content = UiTranslator.T("Play anyway");
+            window.Button_2.Content = UiTranslator.T("See problems");
+            window.ShowDialog();
+            if (window.YesNo) return true;
+            if (!window.IsCancel) ConflictsButton_Click(this, null);
+            return false;
         }
 
         private static bool IsProcessRunning(string processName)
@@ -3542,7 +3577,16 @@ namespace DivaModManager
             // Name or Note
             if (!string.IsNullOrEmpty(SearchModListTextBox.Text))
             {
-                if (ModGridSearch.name == ModGridSearch.note)
+                // 曲名・曲 ID で探す（どの Mod にその曲が入っているか）
+                if (SearchTargetComboBox.SelectedIndex == 3)
+                {
+                    var found = ModSongIndex.Search(Global.ModList.Select(x => x.directory_path), SearchModListTextBox.Text);
+                    Global.ModList = new ObservableCollection<Mod>(Global.ModList.Where(x => found.ContainsKey(x.directory_path)).ToList());
+                    foreach (var (dir, songs) in found)
+                        Logger.WriteLine($"{Path.GetFileName(dir)}: {string.Join(", ", songs.Take(10).Select(x => $"pv_{x.Id} {x.Name}"))}{(songs.Count > 10 ? $" (+{songs.Count - 10})" : "")}", LoggerType.Info);
+                    if (found.Count == 0) Logger.WriteLine($"No installed mod has a song matching \"{SearchModListTextBox.Text}\".", LoggerType.Info);
+                }
+                else if (ModGridSearch.name == ModGridSearch.note)
                 {
                     Global.ModList = new ObservableCollection<Mod>(Global.ModList.Where(x =>
                         x.name.ToLowerInvariant().Contains(SearchModListTextBox.Text.ToLowerInvariant())
@@ -4355,9 +4399,138 @@ namespace DivaModManager
             }
         }
 
+        #region セーブデータのバックアップ・容量
+
+        private void RefreshSaveBackupList()
+        {
+            var list = SaveBackup.List();
+            SaveBackupComboBox.ItemsSource = list;
+            SaveBackupComboBox.SelectedIndex = list.Count > 0 ? 0 : -1;
+            SaveRestoreButton.IsEnabled = list.Count > 0;
+        }
+
+        private async void SaveBackupNowButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!Directory.Exists(SaveBackup.SaveFolder))
+            {
+                Logger.WriteLine($"No Mega Mix+ save data found in {SaveBackup.SaveFolder}", LoggerType.Warning);
+                return;
+            }
+            try { await Task.Run(() => SaveBackup.Create("save")); }
+            catch (Exception ex) { Logger.WriteLine($"Couldn't back up the save data: {ex.Message}", LoggerType.Error); }
+            RefreshSaveBackupList();
+        }
+
+        private void SaveBackupFolderButton_Click(object sender, RoutedEventArgs e)
+        {
+            Directory.CreateDirectory(SaveBackup.BackupFolder);
+            ProcessHelper.TryStartProcess(SaveBackup.BackupFolder);
+        }
+
+        private void SaveRestoreButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (SaveBackupComboBox.SelectedItem is not SaveBackup.Entry entry) return;
+            if (IsProcessRunning("DivaMegaMix"))
+            {
+                Logger.WriteLine("Close the game before restoring a save backup.", LoggerType.Warning);
+                return;
+            }
+            var confirm = new DmmMessageWindowYesNo(
+                UiTranslator.Format("Restore the save from {0}?", entry.Display),
+                UiTranslator.T("Your current save is backed up first, so you can undo this.\nIf Steam asks which save to keep when you start the game, choose the one on this PC (local)."),
+                UiTranslator.T("Save data backups"))
+            { Owner = this };
+            confirm.Button_1.Content = UiTranslator.T("Restore");
+            confirm.Button_2.Content = UiTranslator.T("Cancel");
+            confirm.ShowDialog();
+            if (!confirm.YesNo) return;
+            try
+            {
+                SaveBackup.Restore(entry);
+                Logger.WriteLine($"Save data restored ({entry.Display}).", LoggerType.Info);
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLine($"Couldn't restore the save data: {ex.Message}", LoggerType.Error);
+            }
+            RefreshSaveBackupList();
+        }
+
+        private static string ImageCacheFolder => Path.Combine(Global.assemblyLocation, "cache");
+
+        private async void RefreshDiskSpaceAsync()
+        {
+            DiskSpaceText.Text = UiTranslator.T("Calculating...");
+            var modsFolder = Global.ConfigJson?.CurrentConfig?.ModsFolder;
+            var text = await Task.Run(() =>
+            {
+                long Size(string dir) => Directory.Exists(dir) ? FileHelper.GetDirectorySize(dir) : 0;
+                var lines = new List<string>();
+                if (!string.IsNullOrEmpty(modsFolder) && Directory.Exists(modsFolder))
+                {
+                    var mods = Directory.GetDirectories(modsFolder).Select(d => (Name: Path.GetFileName(d), Size: Size(d))).OrderByDescending(x => x.Size).ToList();
+                    lines.Add(UiTranslator.Format("Mods: {0} in {1} mods", FileHelper.GetDirectorySizeView10(mods.Sum(x => x.Size)), mods.Count));
+                    foreach (var m in mods.Take(5)) lines.Add($"    {m.Name}: {FileHelper.GetDirectorySizeView10(m.Size)}");
+                }
+                lines.Add(UiTranslator.Format("Downloads and temporary files: {0}", FileHelper.GetDirectorySizeView10(Size(Global.downloadBaseLocation))));
+                lines.Add(UiTranslator.Format("Image cache: {0}", FileHelper.GetDirectorySizeView10(Size(ImageCacheFolder))));
+                lines.Add(UiTranslator.Format("Save backups: {0}", FileHelper.GetDirectorySizeView10(Size(SaveBackup.BackupFolder))));
+                return string.Join("\n", lines);
+            });
+            DiskSpaceText.Text = text;
+        }
+
+        private void DiskSpaceRefreshButton_Click(object sender, RoutedEventArgs e) => RefreshDiskSpaceAsync();
+
+        private void CleanDownloadsButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (WorkManager.IsBusy)
+            {
+                WindowHelper.DMMWindowOpen(66);
+                return;
+            }
+            var removed = 0;
+            if (Directory.Exists(Global.downloadBaseLocation))
+            {
+                foreach (var entry in Directory.EnumerateFileSystemEntries(Global.downloadBaseLocation))
+                {
+                    // フォルダの目印のファイルは残す
+                    if (string.Equals(entry, Global.temporaryWarningFilePath, StringComparison.OrdinalIgnoreCase)) continue;
+                    try
+                    {
+                        if (Directory.Exists(entry))
+                        {
+                            foreach (var f in Directory.EnumerateFiles(entry, "*", SearchOption.AllDirectories)) File.SetAttributes(f, FileAttributes.Normal);
+                            Directory.Delete(entry, true);
+                        }
+                        else File.Delete(entry);
+                        removed++;
+                    }
+                    catch (Exception ex) { Logger.WriteLine($"Couldn't delete {entry}: {ex.Message}", LoggerType.Warning); }
+                }
+            }
+            Logger.WriteLine($"Cleaned the Downloads folder ({removed} items removed).", LoggerType.Info);
+            RefreshDiskSpaceAsync();
+        }
+
+        private void CleanImageCacheButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (Directory.Exists(ImageCacheFolder)) Directory.Delete(ImageCacheFolder, true);
+                Logger.WriteLine("Image cache cleaned.", LoggerType.Info);
+            }
+            catch (Exception ex) { Logger.WriteLine($"Couldn't clean the image cache: {ex.Message}", LoggerType.Warning); }
+            RefreshDiskSpaceAsync();
+        }
+
+        #endregion
+
         private void OptionTab_TabSelected(object sender, RoutedEventArgs e)
         {
             SyncLanguageComboBox();
+            RefreshSaveBackupList();
+            RefreshDiskSpaceAsync();
             //if (Global.IsWine)
             //{
             //    App.Current.Dispatcher.Invoke(() =>

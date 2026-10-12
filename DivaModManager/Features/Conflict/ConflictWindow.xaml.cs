@@ -1,5 +1,6 @@
-using DivaModManager.Common.Helpers;
+﻿using DivaModManager.Common.Helpers;
 using DivaModManager.Features.Debug;
+using DivaModManager.Features.Health;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ using System.Windows;
 namespace DivaModManager.Features.Conflict
 {
     /// <summary>
-    /// 有効な Mod 同士の競合（ファイル・曲ID・モジュールID）を一覧表示する
+    /// 有効な Mod 同士の競合（ファイル・曲ID・モジュールID）と、Mod の問題（DLL・曲のファイル）を一覧表示する
     /// </summary>
     public partial class ConflictWindow : Window
     {
@@ -27,15 +28,27 @@ namespace DivaModManager.Features.Conflict
             RescanButton.IsEnabled = false;
             SummaryText.Text = UiTranslator.T("Scanning enabled mods...");
             ConflictGrid.ItemsSource = null;
+            ProblemGrid.ItemsSource = null;
 
             var mods = getEnabledMods();
-            var conflicts = await Task.Run(() => ModConflictScanner.Scan(mods));
+            var gameDir = ModHealthScanner.GameDir;
+            var (conflicts, problems) = await Task.Run(() => (ModConflictScanner.Scan(mods), ModHealthScanner.Scan(mods, gameDir)));
 
             ConflictGrid.ItemsSource = conflicts;
-            SummaryText.Text = conflicts.Count == 0
-                ? UiTranslator.Format("No conflicts found between your {0} enabled mods.", mods.Count)
-                : UiTranslator.Format("{0} conflicts found between your {1} enabled mods: ", conflicts.Count, mods.Count)
-                  + string.Join(", ", conflicts.GroupBy(c => c.TypeText).Select(g => $"{g.Count()} {g.Key}"));
+            ProblemGrid.ItemsSource = problems.OrderBy(p => p.Severity).ThenBy(p => p.Mod).ToList();
+            ConflictHeader.Text = $"{UiTranslator.T("Conflicts")} ({conflicts.Count})";
+            ProblemHeader.Text = $"{UiTranslator.T("Problems")} ({problems.Count})";
+
+            var parts = new List<string>();
+            if (conflicts.Count > 0)
+                parts.Add(UiTranslator.Format("{0} conflicts", conflicts.Count) + " (" + string.Join(", ", conflicts.GroupBy(c => c.TypeText).Select(g => $"{g.Count()} {g.Key}")) + ")");
+            var errors = problems.Count(p => p.Severity == HealthSeverity.Error);
+            if (errors > 0) parts.Add(UiTranslator.Format("{0} errors", errors));
+            var others = problems.Count - errors;
+            if (others > 0) parts.Add(UiTranslator.Format("{0} warnings", others));
+            SummaryText.Text = parts.Count == 0
+                ? UiTranslator.Format("No conflicts or problems found in your {0} enabled mods.", mods.Count)
+                : UiTranslator.Format("Your {0} enabled mods: ", mods.Count) + string.Join(", ", parts);
             RescanButton.IsEnabled = true;
         }
 
