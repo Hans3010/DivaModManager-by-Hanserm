@@ -8,7 +8,7 @@
     <NoWarn>$(NoWarn);XDG0003</NoWarn>
     <ApplicationIcon>Assets\miku.ico</ApplicationIcon>
     <AssemblyName>DivaModManager</AssemblyName>
-    <AssemblyVersion>1.4.1.0</AssemblyVersion>
+    <AssemblyVersion>1.4.2.0</AssemblyVersion>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <!-- dotnet publish で DivaModManager.exe 1つにまとめる（.NET ランタイムも同梱、圧縮）。通常の build には影響しない -->
     <PublishSingleFile>true</PublishSingleFile>

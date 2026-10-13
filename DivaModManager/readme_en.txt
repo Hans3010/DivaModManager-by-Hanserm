@@ -1,5 +1,5 @@
 
-DivaModManager by Hanserm v1.4.1
+DivaModManager by Hanserm v1.4.2
 
 ## Report a bug
 
@@ -10,6 +10,13 @@ DivaModManager by Hanserm v1.4.1
 * Based on DivaModManager by Enomoto (https://github.com/enomoto-r02/DivaModManager-by-Enomoto)
 * Originally created by TekkaGB (DivaModManager)
 * Licensed under GPL-3.0
+
+## New in v1.4.2
+
+* Downloads cut off by closing the manager (or a crash) can be continued: the manager asks at startup and only downloads the missing part.
+* Site column shows GB / DMA as a link to each mod's page, also for mods installed by hand (link in config.toml or found by exact name).
+* DivaModArchive authors: "Back to the list" button; GameBanana author link fixed.
+* The Song tab is disabled while the manager is busy, and the manager's own temporary extraction folders are removed without a size warning.
 
 ## New in v1.4.1
 
