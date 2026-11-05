@@ -16,7 +16,29 @@ namespace DivaModManager.Features.Health
     /// </summary>
     public static class RequirementInstaller
     {
-        public static async Task InstallAsync(string url, string name)
+        public static async Task InstallAsync(string url, string name) => (await StartInstallAsync(url, name))?.Dispose();
+
+        /// <summary>
+        /// Installs a mod and waits until its download window closes (download and extraction finished or cancelled).
+        /// Returns false if it couldn't be downloaded automatically (its page is opened instead)
+        /// </summary>
+        public static async Task<bool> InstallAndWaitAsync(string url, string name)
+        {
+            using var process = await StartInstallAsync(url, name);
+            if (process == null) return false;
+            try
+            {
+                await process.WaitForExitAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLine($"Couldn't wait for the download of {name}: {ex.Message}", LoggerType.Debug);
+            }
+            return true;
+        }
+
+        /// <summary>Starts the download of a mod. Returns the download process, or null if its page was opened instead</summary>
+        private static async Task<Process> StartInstallAsync(string url, string name)
         {
             var gb = Regex.Match(url ?? "", @"gamebanana\.com/mods/(\d+)", RegexOptions.IgnoreCase);
             var dma = Regex.Match(url ?? "", @"divamodarchive\.com/posts?/(\d+)", RegexOptions.IgnoreCase);
@@ -27,16 +49,14 @@ namespace DivaModManager.Features.Health
                     var fileId = await NewestGameBananaFileAsync(int.Parse(gb.Groups[1].Value));
                     if (fileId != null)
                     {
-                        StartDownload($"divamodmanager:https://gamebanana.com/mmdl/{fileId},Mod,{gb.Groups[1].Value}");
                         Logger.WriteLine($"Installing {name} from GameBanana...", LoggerType.Info);
-                        return;
+                        return StartDownload($"divamodmanager:https://gamebanana.com/mmdl/{fileId},Mod,{gb.Groups[1].Value}");
                     }
                 }
                 else if (dma.Success)
                 {
-                    StartDownload($"divamodmanager:dma/{dma.Groups[1].Value}");
                     Logger.WriteLine($"Installing {name} from DivaModArchive...", LoggerType.Info);
-                    return;
+                    return StartDownload($"divamodmanager:dma/{dma.Groups[1].Value}");
                 }
             }
             catch (Exception ex)
@@ -49,13 +69,14 @@ namespace DivaModManager.Features.Health
                 Logger.WriteLine($"Opening the page of {name}: {url}", LoggerType.Info);
                 ProcessHelper.TryStartProcess(url);
             }
+            return null;
         }
 
         /// <summary>Starts a one-click download ("divamodmanager:...") in a new DivaModManager process</summary>
-        public static void StartDownload(string protocolLine)
+        public static Process StartDownload(string protocolLine)
         {
             var exe = Environment.ProcessPath;
-            Process.Start(new ProcessStartInfo(exe, $"-download \"{protocolLine}\"") { UseShellExecute = false, WorkingDirectory = Global.assemblyLocation });
+            return Process.Start(new ProcessStartInfo(exe, $"-download \"{protocolLine}\"") { UseShellExecute = false, WorkingDirectory = Global.assemblyLocation });
         }
 
         /// <summary>ID of the newest file of a GameBanana mod</summary>
