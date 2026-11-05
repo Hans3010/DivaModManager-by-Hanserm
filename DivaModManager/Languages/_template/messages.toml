@@ -453,3 +453,9 @@ context = "Deployed to \"{0}\". \nPlease manually overwrite the existing applica
 window_title = "Update rollout complete."
 button_1 = "Open Folder"
 button_2 = "Close"
+[WINDOW-0091]
+info = "Export Current Loadout"
+context = "Saves the current loadout (mod order, enabled state and download pages) to a file you can share"
+[WINDOW-0092]
+info = "Import Loadout"
+context = "Creates a new loadout from a shared loadout file and offers to download the mods you don't have"

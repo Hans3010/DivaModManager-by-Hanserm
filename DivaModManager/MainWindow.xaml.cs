@@ -10,6 +10,7 @@ using DivaModManager.Features.Download;
 using DivaModManager.Features.Extract;
 using DivaModManager.Features.Feed;
 using DivaModManager.Features.Health;
+using DivaModManager.Features.Loadout;
 using DivaModManager.Features.Saves;
 using DivaModManager.Features.Songs;
 using DivaModManager.Features.Module;
@@ -3335,7 +3336,7 @@ namespace DivaModManager
                 return;
             }
 
-            List<int> messageNoList = new() { 60, 61, 62, 63, 34 };
+            List<int> messageNoList = new() { 60, 61, 62, 63, 91, 92, 34 };
             var sel = await WindowHelper.DMMWindowChoiceOpenAsync(messageNoList);
             if (sel == -1) return;
 
@@ -3418,10 +3419,179 @@ namespace DivaModManager
                                 LoadoutBox.SelectedItem = copyLoadoutWindow.loadout;
                             }
                             break;
+                        // Export current loadout to a file
+                        case 4:
+                            ExportCurrentLoadout();
+                            ModsWatcher?.StartWatching();
+                            break;
+                        // Import a loadout file
+                        case 5:
+                            // Switching to the imported loadout refreshes the list, which starts the watcher again
+                            if (!ImportLoadout()) ModsWatcher?.StartWatching();
+                            break;
                     }
                 });
             });
         }
+
+        #region Share loadouts (export / import)
+
+        private const int SHARE_LIST_MAX = 10;
+
+        /// <summary>Saves the current loadout (order, enabled state and download page of each mod) to a file to share</summary>
+        private void ExportCurrentLoadout()
+        {
+            var name = Global.ConfigJson.Configs[Global.ConfigJson.CurrentGame].CurrentLoadout;
+            var title = UiTranslator.T("Export loadout");
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = title,
+                Filter = LoadoutShare.FILE_FILTER,
+                FileName = LoadoutShare.FileNameFor(name),
+                DefaultExt = ".json",
+                AddExtension = true,
+            };
+            if (dialog.ShowDialog(this) != true) return;
+
+            try
+            {
+                var shared = LoadoutShare.Create(name, Global.ModList_All);
+                LoadoutShare.Save(shared, dialog.FileName);
+                Logger.WriteLine($"Loadout {name} exported to \"{dialog.FileName}\" ({shared.Mods.Count} mods)", LoggerType.Info);
+
+                var context = UiTranslator.Format("{0} mods in load order, with their enabled state. Whoever imports this file can download the mods they don't have from GameBanana and DivaModArchive.", shared.Mods.Count);
+                var withoutPage = shared.Mods.Where(m => !m.CanDownload).ToList();
+                if (withoutPage.Count > 0)
+                    context += "\n\n" + UiTranslator.Format("{0} mods have no GameBanana or DivaModArchive page (installed by hand), so they have to be shared separately:", withoutPage.Count)
+                        + "\n" + SharedModNames(withoutPage);
+                ShowShareMessage(UiTranslator.Format("Loadout \"{0}\" exported.", name), context, title);
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLine($"Couldn't export the loadout {name}: {ex.Message}", LoggerType.Error);
+                ShowShareMessage(UiTranslator.T("Couldn't save the loadout file."), ex.Message, title);
+            }
+        }
+
+        /// <summary>
+        /// Creates a new loadout from a shared loadout file and offers to download the mods that aren't installed.
+        /// True if the new loadout was created (and selected)
+        /// </summary>
+        private bool ImportLoadout()
+        {
+            var title = UiTranslator.T("Import loadout");
+            var dialog = new Microsoft.Win32.OpenFileDialog { Title = title, Filter = LoadoutShare.FILE_FILTER };
+            if (dialog.ShowDialog(this) != true) return false;
+
+            LoadoutShare.SharedLoadout shared;
+            try
+            {
+                shared = LoadoutShare.Load(dialog.FileName);
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLine($"Couldn't read the loadout file \"{dialog.FileName}\": {ex.Message}", LoggerType.Warning);
+                ShowShareMessage(UiTranslator.T("This file isn't a loadout that can be imported."), ex.Message, title);
+                return false;
+            }
+
+            var loadouts = Global.ConfigJson.Configs[Global.ConfigJson.CurrentGame].Loadouts;
+            var nameWindow = new EditWindow(LoadoutShare.UniqueName(shared.Name, loadouts.Keys), false) { Owner = this };
+            nameWindow.ShowDialog();
+            var name = nameWindow.loadout;
+            if (string.IsNullOrEmpty(name)) return false;
+
+            var mods = LoadoutShare.Build(shared, Global.ModList_All.ToList(), out var missing);
+            loadouts.Add(name, mods);
+            Global.LoadoutItems.Add(name);
+            var found = shared.Mods.Count - missing.Count;
+            Logger.WriteLine($"Loadout Imported {name} from \"{dialog.FileName}\": {found} of {shared.Mods.Count} mods installed", LoggerType.Info);
+            LoadoutBox.SelectedItem = name;
+
+            var info = UiTranslator.Format("Loadout \"{0}\" imported: {1} of {2} mods are installed.", name, found, shared.Mods.Count);
+            var parts = new List<string>();
+            if (mods.Count > found)
+                parts.Add(UiTranslator.Format("Your other {0} mods were added at the bottom, disabled.", mods.Count - found));
+            var downloadable = missing.Where(m => m.CanDownload).ToList();
+            var manual = missing.Where(m => !m.CanDownload).ToList();
+            if (manual.Count > 0)
+                parts.Add(UiTranslator.Format("{0} missing mods have no download page and have to be installed by hand:", manual.Count) + "\n" + SharedModNames(manual));
+            if (downloadable.Count == 0)
+            {
+                ShowShareMessage(info, string.Join("\n\n", parts), title);
+                return true;
+            }
+
+            parts.Add(UiTranslator.Format("{0} missing mods can be downloaded from GameBanana or DivaModArchive:", downloadable.Count) + "\n" + SharedModNames(downloadable));
+            parts.Add(UiTranslator.T("Download them now? A download window opens for each mod, one after another."));
+            var ask = new DmmMessageWindowYesNo(info, string.Join("\n\n", parts), title) { Owner = this };
+            ask.Button_1.Content = UiTranslator.T("Download");
+            ask.Button_2.Content = UiTranslator.T("Not now");
+            ask.ShowDialog();
+            if (ask.YesNo)
+                _ = DownloadSharedModsAsync(shared, name, downloadable);
+            else
+                Logger.WriteLine($"Missing mods of loadout {name} not downloaded. Import the file again later to download them.", LoggerType.Info);
+            return true;
+        }
+
+        /// <summary>
+        /// Downloads the missing mods of an imported loadout one by one, then puts them in the shared order
+        /// (new mods are added at the top or bottom of the list)
+        /// </summary>
+        private async Task DownloadSharedModsAsync(LoadoutShare.SharedLoadout shared, string loadoutName, List<LoadoutShare.SharedMod> mods)
+        {
+            try
+            {
+                var started = 0;
+                for (var i = 0; i < mods.Count; i++)
+                {
+                    Logger.WriteLine($"Loadout {loadoutName}: downloading mod {i + 1} of {mods.Count} ({mods[i].DisplayName})", LoggerType.Info);
+                    if (await RequirementInstaller.InstallAndWaitAsync(mods[i].Page, mods[i].DisplayName)) started++;
+                }
+                if (started == 0) return;
+
+                // Let the mods folder watcher add the new mods first
+                await Task.Delay(TimeSpan.FromSeconds(3));
+                while (WorkManager.IsBusy || !Global.IsModGridLoaded)
+                    await Task.Delay(500);
+
+                if (Global.ConfigJson.Configs[Global.ConfigJson.CurrentGame].CurrentLoadout != loadoutName)
+                {
+                    Logger.WriteLine($"The downloads of loadout {loadoutName} finished, but another loadout is selected, so its mod order wasn't updated.", LoggerType.Warning);
+                    return;
+                }
+                await WorkManager.RunAsync(async () =>
+                {
+                    await RefreshAsync();
+                    var placed = LoadoutShare.ApplyOrder(shared, Global.ModList_All);
+                    UpdateModGridAsync(isSearch: Global.SearchModListFlg);
+                    await Global.ConfigUpdatesAsync();
+                    Logger.WriteLine($"Loadout {loadoutName}: {placed} of {shared.Mods.Count} mods installed, in the shared order.", LoggerType.Info);
+                });
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLine($"Couldn't finish the downloads of loadout {loadoutName}: {ex.Message}", LoggerType.Error);
+            }
+        }
+
+        /// <summary>Bulleted list of mod names (the first few)</summary>
+        private static string SharedModNames(List<LoadoutShare.SharedMod> mods)
+        {
+            var lines = mods.Take(SHARE_LIST_MAX).Select(m => $"• {m.DisplayName}").ToList();
+            if (mods.Count > SHARE_LIST_MAX) lines.Add(UiTranslator.Format("...and {0} more", mods.Count - SHARE_LIST_MAX));
+            return string.Join("\n", lines);
+        }
+
+        private void ShowShareMessage(string info, string context, string title)
+        {
+            var window = new DmmMessageWindowOK(info, context, title, true) { Owner = this };
+            window.Button_1.Content = UiTranslator.T("OK");
+            window.ShowDialog();
+        }
+
+        #endregion
 
         // MM+以外のゲームを追加する予定がないため、何もしない
         private void GameBox_DropDownClosed(object sender, EventArgs e)
