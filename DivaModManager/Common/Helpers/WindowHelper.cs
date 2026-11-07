@@ -300,10 +300,12 @@ namespace DivaModManager.Common.Helpers
             WindowInfo info = WindowList.MessageWindowNo(message_no);
             info.replaceList = replaceList;
             MessageBoxResult ret;
-            if (Application.Current?.MainWindow is MainWindow)
+            // MainWindow can only be read on the UI thread (this is also called from background tasks)
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher != null && dispatcher.Invoke(() => Application.Current.MainWindow is MainWindow))
             {
                 // Once the main window is shown, use the same window style as the other messages
-                ret = Application.Current.Dispatcher.Invoke(() => StyledMessageBox(info, type));
+                ret = dispatcher.Invoke(() => StyledMessageBox(info, type));
             }
             else if (window == null)
             {
@@ -311,7 +313,9 @@ namespace DivaModManager.Common.Helpers
             }
             else
             {
-                ret = App.Current.Dispatcher.Invoke(() => MessageBox.Show(info.Info(), $"{info.WindowTitle()}", type, icon));
+                ret = dispatcher != null
+                    ? dispatcher.Invoke(() => MessageBox.Show(info.Info(), $"{info.WindowTitle()}", type, icon))
+                    : MessageBox.Show(info.Info(), $"{info.WindowTitle()}", type, icon);
             }
 
             Logger.WriteLine(string.Join(" ", MeInfo, $"Start.", $"Return:{ret}"), LoggerType.Debug, param: ParamInfo);

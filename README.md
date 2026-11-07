@@ -100,6 +100,10 @@ Spanish translation, and new languages can be added without programming ([TRANSL
 - Heart button and **Favorites** filter in the GameBanana and DivaModArchive tabs.
 - Fixed the author shown twice on DivaModArchive cards and the category icon overlapping its name on GameBanana cards.
 
+**Loadouts**
+- **Export Current Loadout** / **Import Loadout** (Loadouts button): share your mod setup as a small `.loadout.json` file with the mod order, which mods are enabled and the GameBanana / DivaModArchive page of each one.
+  Importing creates a new loadout with the mods you have, in the same order, and offers to download the missing ones one after another, then puts them in place. Rust4Diva modpack files can be imported too.
+
 **Language**
 - Spanish translation (Option tab, Language / Idioma).
 - New languages can be added without programming: see [TRANSLATING.md](TRANSLATING.md).

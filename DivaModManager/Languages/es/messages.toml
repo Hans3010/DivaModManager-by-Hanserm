@@ -447,3 +447,9 @@ context = "Se extrajo en \"{0}\". \nReemplaza a mano los archivos de la aplicaci
 window_title = "Actualización descargada."
 button_1 = "Abrir carpeta"
 button_2 = "Cerrar"
+[WINDOW-0091]
+info = "Exportar perfil actual"
+context = "Guarda el perfil actual (orden de los mods, cuáles están activados y sus páginas de descarga) en un archivo para compartirlo"
+[WINDOW-0092]
+info = "Importar perfil"
+context = "Crea un perfil nuevo desde un archivo de perfil compartido y ofrece descargar los mods que no tienes"
